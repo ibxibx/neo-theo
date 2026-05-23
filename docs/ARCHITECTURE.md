@@ -152,10 +152,52 @@ See [`URGENCY_RULES.md`](./URGENCY_RULES.md) for the full prompt.
 
 ---
 
+## Theo Negotiates Additions
+
+When `urgency = HIGH`, the dispatch path branches into the **Theo Negotiates** subsystem — a parallel multi-agent voice auction with Stripe Connect deposit on owner consent. The full spec, demo script, and guardrails live in [`THEO_NEGOTIATES.md`](./THEO_NEGOTIATES.md). The schema additions:
+
+```sql
+-- handwerker gains four columns
+ALTER TABLE handwerker
+    ADD COLUMN stripe_account_id    TEXT,
+    ADD COLUMN reputation_score     FLOAT DEFAULT 0.5,
+    ADD COLUMN max_concurrent_jobs  INT DEFAULT 3,
+    ADD COLUMN consents_to_ai_calls BOOLEAN DEFAULT FALSE;
+
+-- New tables
+CREATE TABLE auctions (...);          -- one row per HIGH dispatch that took auction path
+CREATE TABLE bids (...);              -- one row per outbound call leg (NULL price = no answer)
+CREATE TABLE owner_consents (...);    -- owner approval audit trail (regulatory + dispute)
+CREATE TABLE payouts (...);           -- Stripe Connect deposit + final-payment events
+
+-- dispatches.action now includes 'AUCTION' alongside DIY_GUIDE / STAFF_QUEUE / HANDWERKER
+```
+
+Full DDL is in [`packages/db/schema.sql`](../packages/db/schema.sql).
+
+### Bid Scoring
+
+The Auction Resolver picks a winner with a weighted score:
+
+```
+score = w_price * (1 / price_eur)
+      + w_eta   * (1 / hours_until_slot)
+      + w_rep   * reputation_score
+```
+
+Defaults: `w_price = 0.5`, `w_eta = 0.3`, `w_rep = 0.2`. Owners can override per-category in their policy.
+
+### Why Auction-As-Dispatch (Not a Separate System)
+
+The auction is implemented as a `dispatches.action = 'AUCTION'` row, not a parallel pipeline. This means: a single source of truth for "what happened on this inquiry," uniform dashboard rendering, and any future dispatch innovations (e.g. predictive maintenance auctions) plug into the same primitives.
+
+---
+
 ## Why This Is "5-Year Tech"
 
 - **Voice-first interfaces** are replacing apps for non-tech-native users (elderly tenants especially)
 - **Agentic AI** that takes actions (not just chats) is the direction every major lab is heading
+- **Multi-agent orchestration with real-world side effects** (parallel outbound voice calls negotiating live, then triggering payment) is what separates AI demos from AI products
 - **RAG + structured dispatch** is becoming the standard pattern for operational AI
 - **Multilingual by default** — ElevenLabs handles 30+ languages, no extra work
-- **Auditable transcripts** future-proof against AI regulation (EU AI Act compliance)
+- **Auditable transcripts + owner consent records** future-proof against AI regulation (EU AI Act compliance, PSD2 strong-customer-authentication parallels)
