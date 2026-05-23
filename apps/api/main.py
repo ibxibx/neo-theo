@@ -1,5 +1,5 @@
 """
-NeoTheo API — FastAPI backend.
+neo-theo API — FastAPI backend.
 
 Endpoints split into 3 groups:
 
@@ -57,12 +57,17 @@ claude = anthropic.Anthropic(api_key=ANTHROPIC_API_KEY) if ANTHROPIC_API_KEY els
 REPO_ROOT = Path(__file__).resolve().parents[2]
 TRIAGE_PROMPT = (REPO_ROOT / "packages" / "agent" / "triage_prompt.md").read_text(encoding="utf-8")
 
-app = FastAPI(title="NeoTheo API", version="0.2.0")
+app = FastAPI(title="neo-theo API", version="0.2.0")
 
-# CORS — for the landing page (green button) + Next.js dashboard
+# CORS — for the landing page (green button) + Next.js dashboard.
+# allow_origin_regex matches:
+#   * any localhost port (local dev)
+#   * any *.vercel.app domain (Vercel previews + production)
+#   * any *.onrender.com (rare cross-service calls)
+# This is safe to combine with allow_credentials=True (unlike "*").
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],   # tighten for production
+    allow_origin_regex=r"https?://(localhost(:\d+)?|127\.0\.0\.1(:\d+)?|.*\.vercel\.app|.*\.onrender\.com)",
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -342,7 +347,7 @@ def health():
             db_ok = False
     return {
         "status": "ok" if db_ok else "degraded",
-        "service": "neotheo-api",
+        "service": "neo-theo-api",
         "version": "0.2.0",
         "db": "ok" if db_ok else "unreachable",
         "claude": "ok" if claude else "missing_key",

@@ -1,0 +1,45 @@
+# Render Blueprint for the neo-theo backend.
+#
+# How to use:
+#   1. Push this file to the repo.
+#   2. On render.com -> New + -> Blueprint -> select ibxibx/neo-theo.
+#      Render detects this file and creates the service.
+#   3. Fill in the env vars (sync: false) in the Render dashboard after
+#      the service is created.
+#   4. Deploy. First build ~3-5 minutes.
+#
+# Service URL will be something like https://neo-theo-api.onrender.com.
+# After deploy, set PUBLIC_TUNNEL_URL to that and re-run
+# apps/api/configure_agent.py so the ElevenLabs agent points at prod.
+
+services:
+  - type: web
+    name: neo-theo-api
+    runtime: python
+    plan: free
+    region: frankfurt
+    rootDir: .
+    buildCommand: pip install -r apps/api/requirements.txt
+    # main.py uses Path(__file__).resolve().parents[2] so cwd does not matter
+    # for finding triage_prompt.md. We cd into apps/api just so uvicorn can
+    # discover main:app without needing namespace-package boilerplate.
+    startCommand: cd apps/api && uvicorn main:app --host 0.0.0.0 --port $PORT
+    healthCheckPath: /health
+    autoDeploy: true
+    envVars:
+      # Secrets — set these in the Render dashboard (Environment tab).
+      # sync: false means do not store the value in this YAML, prompt me at
+      # deploy time and keep the value encrypted at rest on Render.
+      - key: ANTHROPIC_API_KEY
+        sync: false
+      - key: NEXT_PUBLIC_SUPABASE_URL
+        sync: false
+      - key: SUPABASE_SERVICE_ROLE_KEY
+        sync: false
+      - key: ELEVENLABS_API_KEY
+        sync: false
+      - key: ELEVENLABS_WEBHOOK_SECRET
+        sync: false
+      # Pin Python version for reproducibility.
+      - key: PYTHON_VERSION
+        value: "3.12.7"
