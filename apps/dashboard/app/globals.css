@@ -158,6 +158,25 @@ body::before {
 .wave-bars > span:nth-child(4) { animation-delay: 0.18s; height: 70%; }
 .wave-bars > span:nth-child(5) { animation-delay: 0.06s; height: 50%; }
 
+/* Larger waveform used on the in-call phone screen */
+.wave-bars-lg { display: flex; gap: 6px; align-items: center; justify-content: center; height: 80px; }
+.wave-bars-lg > span {
+  display: inline-block;
+  width: 5px;
+  height: 100%;
+  background: currentColor;
+  border-radius: 3px;
+  transform-origin: center;
+  animation: wave_bar 0.85s ease-in-out infinite;
+}
+.wave-bars-lg > span:nth-child(1) { animation-delay: 0s;    height: 35%; }
+.wave-bars-lg > span:nth-child(2) { animation-delay: 0.10s; height: 65%; }
+.wave-bars-lg > span:nth-child(3) { animation-delay: 0.20s; height: 95%; }
+.wave-bars-lg > span:nth-child(4) { animation-delay: 0.30s; height: 100%; }
+.wave-bars-lg > span:nth-child(5) { animation-delay: 0.20s; height: 80%; }
+.wave-bars-lg > span:nth-child(6) { animation-delay: 0.10s; height: 50%; }
+.wave-bars-lg > span:nth-child(7) { animation-delay: 0s;    height: 30%; }
+
 .card {
   position: relative;
   background: rgba(255, 255, 255, 0.62);
