@@ -189,14 +189,14 @@ These are non-negotiable. Implementing the auction without them is irresponsible
 |---|---|
 | **ElevenLabs** | Parallel Conversational AI sessions, outbound calls, German negotiation, tool use (`submit_bid`), multi-agent orchestration — likely the most kinetic ElevenLabs demo at the event |
 | **Anthropic** | Claude as the orchestrator: vendor selection, negotiation brief generation, bid scoring, owner-consent message drafting, full reasoning trace logged |
-| **Stripe** | Connect for vendor onboarding, deposit holds with explicit consent, conditional payouts on job completion, dispute-safe audit trail |
+| **Stripe** | Connect (**Custom accounts**) for API-driven vendor onboarding, deposit holds with explicit consent, conditional payouts on job completion, dispute-safe audit trail |
 
 ---
 
 ## 🚧 What's NOT in Scope for the Hackathon Demo
 
 To keep the demo honest:
-- **Real vendor onboarding to Stripe Connect** — we use a seeded test account
+- **Production vendor KYC** — Stripe Connect runs in test mode; Custom accounts are seeded via the API with test data (full data model is real, identity verification flow is mocked)
 - **Reputation scoring from real history** — seeded with synthetic data
 - **Dispute resolution UI** — described in architecture, not built
 - **Multi-language negotiation** — German only for the demo (the intake agent is multilingual, the negotiator is DE-locked for now)

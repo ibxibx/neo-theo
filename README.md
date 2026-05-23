@@ -85,7 +85,7 @@ HalloTheo's mandate: build the **futuristic tech solution** — what will be eff
 | **Knowledge Base** | Markdown + vector embeddings | DIY guides, YouTube links, articles, all searchable |
 | **Dashboard** | Next.js 14 + Tailwind + shadcn/ui | Real-time staff view, clean and modern |
 | **Notifications** | Twilio (SMS) + SendGrid (email) | Dispatch to tenants and Handwerker |
-| **Payments** | **Stripe Connect (Express)** | Vendor onboarding, deposit holds with explicit owner consent, conditional payouts on job completion — the financial backbone of Theo Negotiates |
+| **Payments** | **Stripe Connect (Custom accounts)** | Vendor onboarding via API (no hosted UI), deposit holds with explicit owner consent, conditional payouts on job completion — the financial backbone of Theo Negotiates. Custom chosen for full control over KYC, branded vendor flow, and API-driven test-account seeding. |
 | **Hosting** | Vercel (dashboard) + Railway/Fly.io (API+DB) | Fast hackathon deploy |
 | **Auth** | Clerk or Supabase Auth | Staff login |
 
