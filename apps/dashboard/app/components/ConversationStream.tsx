@@ -16,7 +16,7 @@ export function ConversationStream({ messages, isLive }: Props) {
   }, [messages]);
 
   return (
-    <div className="card flex flex-col h-full overflow-hidden">
+    <div className={`card flex flex-col h-full overflow-hidden ${isLive ? "card-active" : ""}`}>
       {/* Header */}
       <div className="px-6 py-4 border-b border-black/[0.06] flex items-center justify-between">
         <div>

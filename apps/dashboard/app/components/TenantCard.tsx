@@ -6,6 +6,8 @@ type Props = {
   tenant: Tenant | null;
   /** True once the agent has called lookup_tenant_by_phone and we have a hit */
   identified: boolean;
+  /** True if the tenant is the active focus right now (call is live) */
+  active?: boolean;
 };
 
 const CHANNEL_LABELS: Record<string, string> = {
@@ -32,7 +34,7 @@ const AGE_LABELS: Record<string, string> = {
   "65+": "65+",
 };
 
-export function TenantCard({ tenant, identified }: Props) {
+export function TenantCard({ tenant, identified, active }: Props) {
   if (!tenant) {
     return (
       <div className="card p-6 h-full flex flex-col items-center justify-center text-center">
@@ -56,7 +58,7 @@ export function TenantCard({ tenant, identified }: Props) {
     .join("");
 
   return (
-    <div className="card p-6 h-full flex flex-col">
+    <div className={`card p-6 h-full flex flex-col ${active ? "card-active-green" : ""}`}>
       {/* Header */}
       <div className="flex items-start gap-4">
         <div className="relative">

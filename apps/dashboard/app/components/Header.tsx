@@ -26,12 +26,12 @@ export function Header({ apiStatus, isCallLive }: Props) {
   }, []);
 
   return (
-    <header className="flex items-center justify-between px-8 py-5 border-b border-black/[0.06] bg-white/60 backdrop-blur-xl sticky top-0 z-30">
+    <header className="flex items-center justify-between px-8 py-5 border-b border-black/[0.05] bg-white/45 backdrop-blur-xl backdrop-saturate-150 sticky top-0 z-30">
       <div className="flex items-center gap-3">
         <Logo />
         <div>
           <div className="text-[18px] font-semibold tracking-tight text-ink leading-none">
-            NeoTheo
+            <strong className="font-bold">neo-theo</strong>
           </div>
           <div className="text-[11px] text-ink-soft mt-1 tracking-wide">
             Staff Dashboard · hallo theo

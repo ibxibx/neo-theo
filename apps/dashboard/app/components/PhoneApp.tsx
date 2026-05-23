@@ -162,23 +162,30 @@ function CallCircleButton({
 }
 
 function CallIcon({ variant }: { variant: "phone" | "end" }) {
+  // Apple-style handset glyph. The path below is the canonical iOS handset
+  // (mouthpiece + arc + earpiece), tilted ~30° so it points like an
+  // off-hook receiver. It fills ~55% of the circle to match iOS dialler.
   if (variant === "phone") {
     return (
-      <svg width="44" height="44" viewBox="0 0 44 44" fill="none">
-        <path
-          d="M14 11.2c0-.4.2-.8.5-1l3.4-2c.4-.3 1-.2 1.4.1l3 3c.3.3.4.8.2 1.2l-1.5 3c-.2.4-.1.9.2 1.2 1.7 1.8 4 4.1 5.8 5.8.3.3.8.4 1.2.2l3-1.5c.4-.2.9-.1 1.2.2l3 3c.3.4.4 1 .1 1.4l-2 3.4c-.2.3-.6.5-1 .5-9.4 0-17.5-8.1-17.5-17.5z"
-          fill="currentColor"
-        />
+      <svg width="60" height="60" viewBox="0 0 32 32" fill="none" aria-hidden>
+        <g transform="rotate(-30 16 16)">
+          <path
+            fill="currentColor"
+            d="M9.36 5.6c-1.5 0-2.84 1.2-2.84 2.83 0 12.05 9.4 21.45 21.45 21.45 1.62 0 2.82-1.33 2.82-2.83v-3.85c0-1.36-.92-2.32-2.23-2.59l-3.92-.78c-1.2-.24-1.92-.02-2.43.48l-1.78 1.78c-2.55-1.27-4.7-3.42-5.97-5.97l1.78-1.78c.5-.5.72-1.23.48-2.43l-.78-3.93c-.27-1.3-1.23-2.22-2.6-2.22H9.37z"
+          />
+        </g>
       </svg>
     );
   }
+  // "End call" — same handset but rotated to point downward (iOS red end-call)
   return (
-    <svg width="44" height="44" viewBox="0 0 44 44" fill="none">
-      <path
-        d="M22 16.5c-4.4 0-8.3 1.6-11.4 4.5-.7.6-.7 1.7 0 2.3l2.8 2.5c.6.5 1.4.5 2 0l2.2-1.9c.2-.1.3-.3.3-.6V21c1.3-.4 2.7-.7 4.1-.7s2.8.2 4.1.7v2.3c0 .2.1.4.3.6l2.2 1.9c.6.5 1.4.5 2 0l2.8-2.5c.7-.6.7-1.7 0-2.3-3.1-3-7-4.5-11.4-4.5z"
-        fill="currentColor"
-        transform="rotate(135 22 22)"
-      />
+    <svg width="60" height="60" viewBox="0 0 32 32" fill="none" aria-hidden>
+      <g transform="rotate(135 16 16)">
+        <path
+          fill="currentColor"
+          d="M9.36 5.6c-1.5 0-2.84 1.2-2.84 2.83 0 12.05 9.4 21.45 21.45 21.45 1.62 0 2.82-1.33 2.82-2.83v-3.85c0-1.36-.92-2.32-2.23-2.59l-3.92-.78c-1.2-.24-1.92-.02-2.43.48l-1.78 1.78c-2.55-1.27-4.7-3.42-5.97-5.97l1.78-1.78c.5-.5.72-1.23.48-2.43l-.78-3.93c-.27-1.3-1.23-2.22-2.6-2.22H9.37z"
+        />
+      </g>
     </svg>
   );
 }

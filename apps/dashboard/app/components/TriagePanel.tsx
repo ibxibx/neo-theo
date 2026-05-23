@@ -50,7 +50,7 @@ export function TriagePanel({ triage, classifying }: Props) {
 
   if (classifying) {
     return (
-      <div className="card p-6 h-full flex flex-col items-center justify-center text-center">
+      <div className="card card-active-indigo p-6 h-full flex flex-col items-center justify-center text-center">
         <div className="w-14 h-14 rounded-full bg-accent-indigo/10 mb-4 flex items-center justify-center">
           <div className="w-6 h-6 rounded-full border-2 border-accent-indigo border-t-transparent animate-spin" />
         </div>
