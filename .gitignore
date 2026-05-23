@@ -10,3 +10,7 @@ dist/
 build/
 .vercel
 .turbo
+.dev.log
+.dev.err.log
+*.tsbuildinfo
+.tmp_*
