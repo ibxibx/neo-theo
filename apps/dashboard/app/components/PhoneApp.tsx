@@ -60,7 +60,7 @@ function IdleScreen({ tenant, onCall }: { tenant: Tenant; onCall: () => void }) 
 
         <button
           onClick={onCall}
-          className="mt-12 w-[78px] h-[78px] rounded-full bg-[#34c759] text-white flex items-center justify-center shadow-[0_8px_24px_-4px_rgba(52,199,89,0.55)] active:scale-95 transition-transform animate-glow_breathe"
+          className="mt-12 w-[72px] h-[72px] rounded-full bg-[#34c759] text-white flex items-center justify-center shadow-[0_8px_24px_-4px_rgba(52,199,89,0.55)] active:scale-95 transition-transform animate-glow_breathe"
           aria-label="Anruf starten"
         >
           <PhoneGlyph variant="answer" />
@@ -88,131 +88,64 @@ function InCallScreen({
   callDurationSec: number;
   onEnd: () => void;
 }) {
+  // iOS Phone-app in-call layout, turquoise-teal background, white text.
+  // Single end-call button with iOS-precise proportions:
+  //   circle: 72px diameter
+  //   handset icon: 32px (= 44% of circle, matching iOS dialer)
+  //   tilt: 135deg clockwise (the canonical "end-call" angle)
   return (
-    <>
-      <div className="pt-8 px-6 text-center">
-        <div className="text-[32px] font-semibold tracking-tight text-black leading-tight">
+    <div className="absolute inset-0 bg-[#5ac8fa] flex flex-col text-white">
+      {/* Header: large name, timer, subtitle */}
+      <div className="pt-10 px-6 text-center">
+        <div className="text-[34px] font-semibold tracking-tight leading-tight">
           Theo
         </div>
-        <div className="text-[15px] text-[#8e8e93] mt-2 font-medium tabular-nums">
+        <div className="text-[16px] mt-2 font-medium tabular-nums opacity-90">
           {isRinging ? "Verbindet …" : formatDuration(callDurationSec)}
         </div>
-        <div className="text-[13px] text-[#86868b] mt-0.5">
+        <div className="text-[13px] mt-1 opacity-75">
           hallo theo · Service-Assistent
         </div>
       </div>
 
+      {/* Middle: voice activity waveform, white on teal */}
       <div className="flex-1 flex items-center justify-center">
-        <div className="text-[#34c759]">
+        <div className="text-white/95">
           <div className="wave-bars-lg">
             <span /><span /><span /><span /><span /><span /><span />
           </div>
         </div>
       </div>
 
-      <div className="px-8 pb-4">
-        <div className="grid grid-cols-3 gap-y-5 justify-items-center">
-          <IosButton icon="mute" label="Stumm" />
-          <IosButton icon="keypad" label="Tastatur" />
-          <IosButton icon="audio" label="Audio" />
-          <IosButton icon="add" label="Hinzufügen" />
-          <IosButton icon="facetime" label="FaceTime" />
-          <IosButton icon="contacts" label="Kontakte" />
-        </div>
-      </div>
-
-      <div className="px-6 pb-10 flex justify-center">
+      {/* End-call button: iOS-precise (72px circle, 32px icon at -135deg) */}
+      <div className="px-6 pb-14 flex flex-col items-center">
         <button
           onClick={onEnd}
-          className="w-[68px] h-[68px] rounded-full bg-[#ff3b30] text-white flex items-center justify-center shadow-[0_8px_24px_-4px_rgba(255,59,48,0.55)] active:scale-95 transition-transform"
+          className="w-[72px] h-[72px] rounded-full bg-[#ff3b30] text-white flex items-center justify-center shadow-[0_8px_24px_-4px_rgba(0,0,0,0.25)] active:scale-95 transition-transform"
           aria-label="Anruf beenden"
         >
           <PhoneGlyph variant="end" />
         </button>
+        <div className="mt-3 text-[13px] text-white/85 font-medium">
+          Anruf beenden
+        </div>
       </div>
-    </>
-  );
-}
-
-function IosButton({
-  icon,
-  label,
-}: {
-  icon: "mute" | "keypad" | "audio" | "add" | "facetime" | "contacts";
-  label: string;
-}) {
-  return (
-    <div className="flex flex-col items-center gap-1.5">
-      <div className="w-[58px] h-[58px] rounded-full bg-[rgba(118,118,128,0.12)] text-black flex items-center justify-center">
-        <IosButtonIcon icon={icon} />
-      </div>
-      <div className="text-[11px] text-black font-medium">{label}</div>
     </div>
   );
 }
 
-function IosButtonIcon({ icon }: { icon: string }) {
-  const s = 1.6;
-  switch (icon) {
-    case "mute":
-      return (
-        <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
-          <rect x="9" y="3" width="6" height="11" rx="3" stroke="currentColor" strokeWidth={s} />
-          <path d="M6 12a6 6 0 0012 0M12 18v3" stroke="currentColor" strokeWidth={s} strokeLinecap="round" />
-          <path d="M4 4l16 16" stroke="currentColor" strokeWidth={s} strokeLinecap="round" />
-        </svg>
-      );
-    case "keypad":
-      return (
-        <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
-          <circle cx="5" cy="5" r="1.6" fill="currentColor" />
-          <circle cx="12" cy="5" r="1.6" fill="currentColor" />
-          <circle cx="19" cy="5" r="1.6" fill="currentColor" />
-          <circle cx="5" cy="12" r="1.6" fill="currentColor" />
-          <circle cx="12" cy="12" r="1.6" fill="currentColor" />
-          <circle cx="19" cy="12" r="1.6" fill="currentColor" />
-          <circle cx="5" cy="19" r="1.6" fill="currentColor" />
-          <circle cx="12" cy="19" r="1.6" fill="currentColor" />
-          <circle cx="19" cy="19" r="1.6" fill="currentColor" />
-        </svg>
-      );
-    case "audio":
-      return (
-        <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
-          <path d="M12 4a6 6 0 016 6v4a6 6 0 01-12 0v-4a6 6 0 016-6z" stroke="currentColor" strokeWidth={s} />
-          <path d="M9 11v2M15 11v2" stroke="currentColor" strokeWidth={s} strokeLinecap="round" />
-        </svg>
-      );
-    case "add":
-      return (
-        <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
-          <circle cx="9" cy="9" r="3" stroke="currentColor" strokeWidth={s} />
-          <path d="M3.5 19a5.5 5.5 0 0111 0" stroke="currentColor" strokeWidth={s} strokeLinecap="round" />
-          <path d="M18 8v8M14 12h8" stroke="currentColor" strokeWidth={s} strokeLinecap="round" />
-        </svg>
-      );
-    case "facetime":
-      return (
-        <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
-          <rect x="3" y="6" width="14" height="12" rx="2.5" stroke="currentColor" strokeWidth={s} />
-          <path d="M17 10.5l4-2v7l-4-2v-3z" stroke="currentColor" strokeWidth={s} strokeLinejoin="round" />
-        </svg>
-      );
-    case "contacts":
-      return (
-        <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
-          <circle cx="12" cy="9" r="3.5" stroke="currentColor" strokeWidth={s} />
-          <path d="M5 20a7 7 0 0114 0" stroke="currentColor" strokeWidth={s} strokeLinecap="round" />
-        </svg>
-      );
-    default:
-      return null;
-  }
-}
-
 function PhoneGlyph({ variant }: { variant: "answer" | "end" }) {
+  // Apple iOS handset glyph. The path below is sized to fill a 32×32 viewBox
+  // edge-to-edge (the original Apple handset is ~24×24 in its own bounding
+  // box; we use a 32px viewBox with no padding so the icon visually fills
+  // ~85% of the parent button — giving the Apple ~45% icon-to-circle ratio
+  // when rendered inside a 72px circle.
+  //
+  // The transform is the iconic iOS dial-pad tilt:
+  //   answer = rotate(-30deg)  — handset coming up "off-hook"
+  //   end    = rotate(135deg)  — handset coming down to hang up
   return (
-    <svg width="34" height="34" viewBox="0 0 32 32" fill="none" aria-hidden>
+    <svg width="32" height="32" viewBox="0 0 32 32" fill="none" aria-hidden>
       <g transform={variant === "answer" ? "rotate(-30 16 16)" : "rotate(135 16 16)"}>
         <path
           fill="currentColor"
