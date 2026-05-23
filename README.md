@@ -85,7 +85,7 @@ HalloTheo's mandate: build the **futuristic tech solution** — what will be eff
 | **Knowledge Base** | Markdown + vector embeddings | DIY guides, YouTube links, articles, all searchable |
 | **Dashboard** | Next.js 14 + Tailwind + shadcn/ui | Real-time staff view, clean and modern |
 | **Notifications** | Twilio (SMS) + SendGrid (email) | Dispatch to tenants and Handwerker |
-| **Payments** | **Stripe Connect (Custom accounts)** | Vendor onboarding via API (no hosted UI), deposit holds with explicit owner consent, conditional payouts on job completion — the financial backbone of Theo Negotiates. Custom chosen for full control over KYC, branded vendor flow, and API-driven test-account seeding. |
+| **Payments** | **Stripe — two-sided marketplace** | (1) Stripe Customer + off-session billing → NeoTheo charges Handwerker a 10% lead fee on win. (2) Stripe Connect (Custom accounts) → owner pays Handwerker via destination charges with a 30% deposit hold on consent, full release on completion. Both flows fire on a single auction win. |
 | **Hosting** | Vercel (dashboard) + Railway/Fly.io (API+DB) | Fast hackathon deploy |
 | **Auth** | Clerk or Supabase Auth | Staff login |
 
@@ -114,23 +114,27 @@ neotheo/
 
 ## 🎙️ Theo Negotiates — the HIGH-Urgency Auction
 
-When the triage layer classifies an inquiry as `HIGH` (active leak, no heat in winter, gas smell, electrical sparking), NeoTheo invokes **Theo Negotiates**: a multi-agent voice auction that finds the right vendor in under two minutes.
+When the triage layer classifies an inquiry as `HIGH` (active leak, no heat in winter, gas smell, electrical sparking), NeoTheo invokes **Theo Negotiates**: a multi-agent voice auction that finds the right vendor in under two minutes — and triggers a **two-sided Stripe marketplace** in one move.
 
 **What happens:**
 1. The orchestrator (Claude) picks 3 Handwerker matching the category and writes a German negotiation brief
 2. Three ElevenLabs Conversational AI agents place **parallel outbound calls** via Twilio
-3. Each agent negotiates price and earliest slot, then calls `submit_bid(price, slot, confidence)`
+3. Each agent discloses the lead fee up front, negotiates price and earliest slot, then calls `submit_bid(price, slot, confidence)`
 4. After all legs return (or timeout), the resolver scores bids on `price × ETA × reputation` and picks a winner
-5. The property owner gets a one-tap consent push (SMS / Stripe-hosted link): *"Approve €144 deposit to Müller Klempnerei?"*
-6. On approval, **Stripe Connect** holds a 30% deposit; full payment is released on job completion
+5. The property owner gets a one-tap consent push: *"Approve Müller Klempnerei, €480, tomorrow 9 AM?"*
+6. On approval, **two Stripe operations fire in parallel:**
+   - **Vendor → NeoTheo:** off-session 10% lead fee charged to the Handwerker's card/SEPA on file (NeoTheo's revenue — *"automatic payout for the service"*)
+   - **Owner → Vendor (via Connect):** 30% deposit hold on the owner; full amount released on job completion
 7. The tenant gets an outbound confirmation call from ElevenLabs
+
+**Two-sided marketplace, one win.** The Handwerker pays NeoTheo for the lead (because we just brought them a qualified, owner-approved job). The owner pays the Handwerker through us (because we keep the deposit on hold until the job is done, which protects them from no-shows). Both flows are auditable, both are demoable in under two minutes.
 
 **Why this lights up all three sponsor tracks:**
 - **ElevenLabs** — parallel conversational agents, outbound dialing, German negotiation, tool use
 - **Anthropic** — Claude as the orchestrator: vendor selection, brief generation, bid scoring
-- **Stripe** — Connect for vendor onboarding, deposits, conditional payouts, dispute-safe audit trail
+- **Stripe** — Customer-side off-session billing (lead fee) + Connect Custom destination charges (owner deposit) — a real two-sided marketplace, not a one-flow demo
 
-Full flow, schema additions (`auctions`, `bids`, `owner_consents`, `payouts`), guardrails, demo script, and Stripe setup live in [`docs/THEO_NEGOTIATES.md`](./docs/THEO_NEGOTIATES.md).
+Full flow, schema additions (`auctions`, `bids`, `owner_consents`, `payouts`, `vendor_charges`), guardrails, and demo script live in [`docs/THEO_NEGOTIATES.md`](./docs/THEO_NEGOTIATES.md).
 
 ---
 
@@ -147,7 +151,8 @@ Every call is filed under the tenant's identity. Core entities:
 - **Auction** — `id`, `inquiry_id`, `category`, `brief`, `n_vendors`, `status`, `winning_bid_id`
 - **Bid** — `id`, `auction_id`, `handwerker_id`, `price_eur`, `earliest_slot`, `confidence`, `transcript`, `score`
 - **OwnerConsent** — `id`, `auction_id`, `bid_id`, `channel`, `message_sent`, `deposit_amount_eur`, `decision`, `responded_at`
-- **Payout** — `id`, `auction_id`, `bid_id`, `stripe_payment_intent`, `deposit_amount_eur`, `status`
+- **Payout** *(owner-side)* — `id`, `auction_id`, `bid_id`, `stripe_payment_intent`, `deposit_amount_eur`, `final_amount_eur`, `status`
+- **VendorCharge** *(vendor-side)* — `id`, `auction_id`, `bid_id`, `stripe_payment_intent`, `winning_bid_eur`, `fee_pct`, `fee_amount_eur`, `status`
 
 See [`docs/ARCHITECTURE.md`](./docs/ARCHITECTURE.md) for the full schema, and [`docs/THEO_NEGOTIATES.md`](./docs/THEO_NEGOTIATES.md) for the auction subsystem.
 

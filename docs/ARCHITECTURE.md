@@ -154,21 +154,31 @@ See [`URGENCY_RULES.md`](./URGENCY_RULES.md) for the full prompt.
 
 ## Theo Negotiates Additions
 
-When `urgency = HIGH`, the dispatch path branches into the **Theo Negotiates** subsystem — a parallel multi-agent voice auction with Stripe Connect deposit on owner consent. The full spec, demo script, and guardrails live in [`THEO_NEGOTIATES.md`](./THEO_NEGOTIATES.md). The schema additions:
+When `urgency = HIGH`, the dispatch path branches into the **Theo Negotiates** subsystem — a parallel multi-agent voice auction wired into a **two-sided Stripe marketplace**:
+
+- **Vendor-side flow** (NeoTheo's revenue): Handwerker pays NeoTheo a % lead fee on win, via off-session PaymentIntent on their stored Customer.
+- **Owner-side flow** (job payment): Owner pays Handwerker via Stripe Connect destination charge — deposit on consent, final amount on job completion.
+
+Both flows fire on a single auction win. Full spec, demo script, and guardrails in [`THEO_NEGOTIATES.md`](./THEO_NEGOTIATES.md). Schema additions:
 
 ```sql
--- handwerker gains four columns
+-- handwerker gains dual Stripe identity + lead-fee config
 ALTER TABLE handwerker
-    ADD COLUMN stripe_account_id    TEXT,
-    ADD COLUMN reputation_score     FLOAT DEFAULT 0.5,
-    ADD COLUMN max_concurrent_jobs  INT DEFAULT 3,
-    ADD COLUMN consents_to_ai_calls BOOLEAN DEFAULT FALSE;
+    ADD COLUMN stripe_customer_id            TEXT,       -- NeoTheo's customer (we charge them)
+    ADD COLUMN stripe_default_payment_method TEXT,       -- card / SEPA on file
+    ADD COLUMN stripe_account_id             TEXT,       -- Connect Custom (owner pays them)
+    ADD COLUMN lead_fee_pct                  NUMERIC(5,2) DEFAULT 10.00,
+    ADD COLUMN reputation_score              FLOAT DEFAULT 0.5,
+    ADD COLUMN max_concurrent_jobs           INT DEFAULT 3,
+    ADD COLUMN consents_to_ai_calls          BOOLEAN DEFAULT FALSE,
+    ADD COLUMN consents_to_auto_lead_fee     BOOLEAN DEFAULT FALSE;
 
 -- New tables
 CREATE TABLE auctions (...);          -- one row per HIGH dispatch that took auction path
-CREATE TABLE bids (...);              -- one row per outbound call leg (NULL price = no answer)
-CREATE TABLE owner_consents (...);    -- owner approval audit trail (regulatory + dispute)
-CREATE TABLE payouts (...);           -- Stripe Connect deposit + final-payment events
+CREATE TABLE bids (...);              -- one row per outbound call leg
+CREATE TABLE owner_consents (...);    -- owner approval audit trail
+CREATE TABLE payouts (...);           -- OWNER-SIDE: Connect deposit + final to vendor
+CREATE TABLE vendor_charges (...);    -- VENDOR-SIDE: lead fee off-session charge to vendor
 
 -- dispatches.action now includes 'AUCTION' alongside DIY_GUIDE / STAFF_QUEUE / HANDWERKER
 ```

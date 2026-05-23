@@ -77,11 +77,15 @@ CREATE TABLE handwerker (
     phone           TEXT NOT NULL,
     email           TEXT,
     on_call         BOOLEAN DEFAULT TRUE,
-    -- Theo Negotiates additions
-    stripe_account_id    TEXT,                       -- Stripe Connect account
-    reputation_score     FLOAT DEFAULT 0.5 CHECK (reputation_score BETWEEN 0 AND 1),
-    max_concurrent_jobs  INT DEFAULT 3,
-    consents_to_ai_calls BOOLEAN DEFAULT FALSE       -- opt-in required by guardrail
+    -- Theo Negotiates: dual Stripe identity (two-sided marketplace)
+    stripe_customer_id          TEXT,                -- Handwerker as NeoTheo's customer (we charge lead fees)
+    stripe_default_payment_method TEXT,              -- on-file card / SEPA mandate for auto-charge
+    stripe_account_id           TEXT,                -- Custom Connect account (owner pays them through us)
+    lead_fee_pct                NUMERIC(5,2) DEFAULT 10.00,  -- % of winning bid billed to Handwerker
+    reputation_score            FLOAT DEFAULT 0.5 CHECK (reputation_score BETWEEN 0 AND 1),
+    max_concurrent_jobs         INT DEFAULT 3,
+    consents_to_ai_calls        BOOLEAN DEFAULT FALSE,       -- opt-in required by guardrail
+    consents_to_auto_lead_fee   BOOLEAN DEFAULT FALSE        -- explicit consent to off-session charging
 );
 
 -- =========================================================================
@@ -150,11 +154,13 @@ CREATE TABLE owner_consents (
 CREATE INDEX idx_owner_consents_auction ON owner_consents(auction_id);
 
 CREATE TABLE payouts (
+    -- OWNER-SIDE FLOW: owner pays Handwerker (via Stripe Connect destination charge)
+    -- Deposit on owner consent, full amount on job completion.
     id                      UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     auction_id              UUID NOT NULL REFERENCES auctions(id),
     bid_id                  UUID NOT NULL REFERENCES bids(id),
     handwerker_id           UUID NOT NULL REFERENCES handwerker(id),
-    stripe_payment_intent   TEXT UNIQUE,
+    stripe_payment_intent   TEXT UNIQUE,                 -- destination charge PI
     stripe_transfer_id      TEXT,
     deposit_amount_eur      NUMERIC(10,2) NOT NULL,
     final_amount_eur        NUMERIC(10,2),
@@ -170,3 +176,28 @@ CREATE TABLE payouts (
 
 CREATE INDEX idx_payouts_auction ON payouts(auction_id);
 CREATE INDEX idx_payouts_status ON payouts(status);
+
+CREATE TABLE vendor_charges (
+    -- LEAD-FEE FLOW: NeoTheo bills Handwerker when they win an auction.
+    -- Off-session PaymentIntent on Handwerker's stripe_customer_id (card / SEPA on file).
+    -- This is the "automatic payout for the service" that NeoTheo provides.
+    id                      UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    auction_id              UUID NOT NULL REFERENCES auctions(id),
+    bid_id                  UUID NOT NULL REFERENCES bids(id),
+    handwerker_id           UUID NOT NULL REFERENCES handwerker(id),
+    stripe_payment_intent   TEXT UNIQUE,                 -- charge on handwerker's customer record
+    winning_bid_eur         NUMERIC(10,2) NOT NULL,      -- bid value at time of win
+    fee_pct                 NUMERIC(5,2) NOT NULL,       -- snapshot of handwerker.lead_fee_pct
+    fee_amount_eur          NUMERIC(10,2) NOT NULL,      -- winning_bid_eur * fee_pct / 100
+    status                  TEXT NOT NULL DEFAULT 'pending'
+                            CHECK (status IN (
+                                'pending','succeeded','failed','refunded','disputed'
+                            )),
+    failure_reason          TEXT,
+    charged_at              TIMESTAMPTZ,
+    raw_stripe_event        JSONB
+);
+
+CREATE INDEX idx_vendor_charges_auction ON vendor_charges(auction_id);
+CREATE INDEX idx_vendor_charges_handwerker ON vendor_charges(handwerker_id, charged_at DESC);
+CREATE INDEX idx_vendor_charges_status ON vendor_charges(status);
