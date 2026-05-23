@@ -151,11 +151,11 @@ This list is short, and it should stay short. Anything on it = "Phase 2" in the 
 
 > "Hallo Theo manages thousands of apartments across Berlin. Their property managers spend 70% of their time on calls that don't need a human — locked-out tenants asking for a Schlüsseldienst, retirees who lost their Nebenkostenabrechnung, simple plumbing fixes.
 >
-> NeoTheo is the AI voice layer that handles those 70%. A tenant calls — in their language, with their tech comfort. Our agent picks up, identifies them, classifies urgency, and routes to the right place: a DIY guide for the easy ones, the right Property Manager for the complex ones, an emergency vendor for actual emergencies.
+> **neo-theo** is the AI voice layer that handles those 70%. A tenant calls — in their language, with their tech comfort. Our agent picks up, identifies them, classifies urgency, and routes to the right place: a DIY guide for the easy ones, the right Property Manager for the complex ones, an emergency vendor for actual emergencies.
 >
 > But what makes this real for Hallo Theo isn't the AI. It's that **every staff handoff also extracts the property manager's 'tested knowledge' back into the property record** — so when the same building has the same elevator problem in 2 years, the next person on the phone already knows.
 >
-> And in Phase 2, NeoTheo doesn't just route the HIGH-urgency calls — it auctions them. Three Handwerker, parallel voice negotiation, owner one-tap consent, two-sided Stripe marketplace. *That's* the 5-year vision Hallo Theo is investing in."
+> And in Phase 2, **neo-theo** doesn't just route the HIGH-urgency calls — it auctions them. Three Handwerker, parallel voice negotiation, owner one-tap consent, two-sided Stripe marketplace. *That's* the 5-year vision Hallo Theo is investing in."
 
 ---
 

@@ -1,4 +1,4 @@
-# NeoTheo Triage Classifier — System Prompt (post-call Claude)
+# **neo-theo** Triage Classifier — System Prompt (post-call Claude)
 
 > Authoritative system prompt for the **post-call triage classifier**. Runs after the ElevenLabs intake agent hangs up. Takes the transcript + tenant context + property context, emits structured JSON that drives the dispatch system. Companion files: `system_prompt.md` (intake agent), `docs/CATEGORIES_AND_ACTIONS.md` (full taxonomy + Standard Action Sequences), `docs/INQUIRIES_SAMPLES.md` (eval set).
 

@@ -3,7 +3,7 @@
 > Realistic inquiry samples spanning Hallo Theo's actual customer base, age **25 to 100**, tech-affinity from "doesn't own a smartphone" to "writes their own AI agents." Used for:
 > 1. **Training data** for the Claude triage classifier
 > 2. **Eval set** to measure classification accuracy
-> 3. **Demo material** — judges can pick any of these and see how NeoTheo routes them
+> 3. **Demo material** — judges can pick any of these and see how **neo-theo** routes them
 > 4. **Source material** for the knowledge-base DIY guides
 >
 > All inquiries are fictional. Names, addresses, and details are illustrative — but situations are based on real property-management patterns Jan @ Hallo Theo described in [JAN_FEEDBACK.md](./JAN_FEEDBACK.md). Apartments span both **WEG** (homeowner-association tenants) and **SEV** (single-rental tenants).
@@ -296,7 +296,7 @@
 **#45** — *Jakob Hofer, 25, tech: High, prefers In-app, SEV tenant.*
 > "Hey can I get a virtual viewing of the apartment 2C — I'm thinking of moving there when my contract ends."
 - Urgency: **LOW** · Class: **SERVICER_QUEUE** · Category: `administrative` → **SAS-2**
-- Dispatch: Forwards to leasing team (out-of-NeoTheo-scope but handled gracefully — "I'll forward this to the leasing team, they'll reach out within 1 business day").
+- Dispatch: Forwards to leasing team (out-of-**neo-theo**-scope but handled gracefully — "I'll forward this to the leasing team, they'll reach out within 1 business day").
 
 **#46** — *Verena Lang, 58, tech: Med, prefers Email, WEG owner.*
 > "Ich möchte einen Termin mit dem Verwalter persönlich vereinbaren. Wann kann er?"
@@ -358,4 +358,4 @@ Feed each inquiry → expected classification JSON into the Claude system-prompt
 Pick 3–5 of these (suggest #6, #12, #18, #38, #44) for the live demo. They span DIY auto-resolve, EMERGENCY dispatch, after-hours lockout (HIGH but not EMERGENCY), gas-leak (true safety), and the grief-sensitive edge case (showing the system has empathy logic).
 
 **For the pitch:**
-Use the distribution table above to show judges we understand the customer base. Hallo Theo's actual customers span 25–100 years old. NeoTheo handles all of them.
+Use the distribution table above to show judges we understand the customer base. Hallo Theo's actual customers span 25–100 years old. **neo-theo** handles all of them.

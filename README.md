@@ -1,4 +1,4 @@
-# 🚀 NeoTheo
+# 🚀 **neo-theo**
 
 > **The future of tenant–property communication.**
 > Built for the HalloTheo Hackathon · Track 1 · ElevenLabs Integration
@@ -11,7 +11,7 @@ HalloTheo's mandate: build the **futuristic tech solution** — what will be eff
 
 **The insight:** *7 out of 10 tenant inquiries don't need real staff involvement.* They're minor issues or things solvable with a step-by-step guide, a YouTube link, or a short article.
 
-**NeoTheo** is the AI voice layer that sits between tenants and property staff. It listens, understands, classifies urgency, and routes the inquiry to the right place — automatically.
+**neo-theo** is the AI voice layer that sits between tenants and property staff. It listens, understands, classifies urgency, and routes the inquiry to the right place — automatically.
 
 ---
 
@@ -43,7 +43,7 @@ See [`docs/CATEGORIES_AND_ACTIONS.md`](./docs/CATEGORIES_AND_ACTIONS.md) for the
    - 🏠 **PROPERTY_MANAGER** → routed to the named PM for that property, with full context + AI-summarized brief
    - 💰 **OWNER_APPROVAL** → owner gets a one-tap consent link (above-budget repairs, structural decisions)
    - 🚨 **EMERGENCY_DISPATCH** → parallel notification to vendor + PM + owner; safety advisory to tenant if applicable
-   - 📚 **`KNOWLEDGE_CAPTURE_REQUIRED`** modifier → after staff resolves, NeoTheo prompts them to write back what they did to the property's knowledge graph (operationalizing Hallo Theo's "tested knowledge" strategic priority)
+   - 📚 **`KNOWLEDGE_CAPTURE_REQUIRED`** modifier → after staff resolves, **neo-theo** prompts them to write back what they did to the property's knowledge graph (operationalizing Hallo Theo's "tested knowledge" strategic priority)
 6. **Everything is logged in Supabase** — full transcript, classification, dispatch action, knowledge captures — indexed by tenant ID / contract number / property ID. The Phase-2 [`Theo Negotiates`](./docs/THEO_NEGOTIATES.md) auction subsystem extends `OWNER_APPROVAL` with multi-vendor voice auctions + two-sided Stripe marketplace.
 
 ---
@@ -52,7 +52,7 @@ See [`docs/CATEGORIES_AND_ACTIONS.md`](./docs/CATEGORIES_AND_ACTIONS.md) for the
 
 ```
    ┌─────────────┐        ┌────────────────────┐        ┌──────────────────┐
-   │   Tenant    │─green ▶│ ElevenLabs Agent   │───────▶│  NeoTheo API     │
+   │   Tenant    │─green ▶│ ElevenLabs Agent   │───────▶│  neo-theo API    │
    │ (web call)  │ button │ (voice + STT/TTS)  │ webhook│  (FastAPI/Node)  │
    └─────────────┘        └────────────────────┘        └────────┬─────────┘
                                                                   │
@@ -106,7 +106,7 @@ See [`docs/CATEGORIES_AND_ACTIONS.md`](./docs/CATEGORIES_AND_ACTIONS.md) for the
 | **Knowledge Base** | Markdown + pgvector embeddings in Supabase | DIY guides, YouTube links, articles, all semantically searchable |
 | **Dashboard** | Next.js 14 + Tailwind + shadcn/ui + `@supabase/realtime-js` | Real-time staff view: live transcript stream, auction panels, Stripe events |
 | **Notifications** | SendGrid (email DIY guides) | Email dispatch to tenants |
-| **Payments** | **Stripe — two-sided marketplace** | (1) Stripe Customer + off-session billing → NeoTheo charges Handwerker a 10% lead fee on win. (2) Stripe Connect (Custom accounts) → owner pays Handwerker via destination charges with a 30% deposit hold on consent, full release on completion. Both flows fire on a single auction win. |
+| **Payments** | **Stripe — two-sided marketplace** | (1) Stripe Customer + off-session billing → **neo-theo** charges Handwerker a 10% lead fee on win. (2) Stripe Connect (Custom accounts) → owner pays Handwerker via destination charges with a 30% deposit hold on consent, full release on completion. Both flows fire on a single auction win. |
 | **Hosting** | Local (per mentor guidance) — production: Vercel + Supabase Cloud | Local-only for demo. Supabase Cloud takes the DB + Auth + Realtime concerns off the deployment surface. |
 | **Auth** | Supabase Auth | Staff login; ships with the DB |
 
@@ -115,7 +115,7 @@ See [`docs/CATEGORIES_AND_ACTIONS.md`](./docs/CATEGORIES_AND_ACTIONS.md) for the
 ## 📁 Repo Structure
 
 ```
-neotheo/
+neo-theo/
 ├── apps/
 │   ├── dashboard/        # Next.js staff dashboard
 │   └── api/              # FastAPI backend (webhooks, AI triage, dispatch)
@@ -140,7 +140,7 @@ neotheo/
 
 ## 🎙️ Theo Negotiates — the HIGH-Urgency Auction
 
-When the triage layer classifies an inquiry as `HIGH` (active leak, no heat in winter, gas smell, electrical sparking), NeoTheo invokes **Theo Negotiates**: a multi-agent voice auction that finds the right vendor in under two minutes — and triggers a **two-sided Stripe marketplace** in one move.
+When the triage layer classifies an inquiry as `HIGH` (active leak, no heat in winter, gas smell, electrical sparking), **neo-theo** invokes **Theo Negotiates**: a multi-agent voice auction that finds the right vendor in under two minutes — and triggers a **two-sided Stripe marketplace** in one move.
 
 **What happens:**
 1. The orchestrator (Claude) picks 3 Handwerker matching the category and writes a German negotiation brief
@@ -149,11 +149,11 @@ When the triage layer classifies an inquiry as `HIGH` (active leak, no heat in w
 4. After all sessions return (or timeout), the resolver scores bids on `price × ETA × reputation` and picks a winner
 5. The property owner gets a one-tap consent push: *"Approve Müller Klempnerei, €480, tomorrow 9 AM?"*
 6. On approval, **two Stripe operations fire in parallel:**
-   - **Vendor → NeoTheo:** off-session 10% lead fee charged to the Handwerker's card/SEPA on file (NeoTheo's revenue — *"automatic payout for the service"*)
+   - **Vendor → neo-theo:** off-session 10% lead fee charged to the Handwerker's card/SEPA on file (**neo-theo**'s revenue — *"automatic payout for the service"*)
    - **Owner → Vendor (via Connect):** 30% deposit hold on the owner; full amount released on job completion
 7. The tenant receives a confirmation message (web agent voice replay or SMS — demo flexible)
 
-**Two-sided marketplace, one win.** The Handwerker pays NeoTheo for the lead (because we just brought them a qualified, owner-approved job). The owner pays the Handwerker through us (because we keep the deposit on hold until the job is done, which protects them from no-shows). Both flows are auditable in Supabase, both fire in under two minutes.
+**Two-sided marketplace, one win.** The Handwerker pays **neo-theo** for the lead (because we just brought them a qualified, owner-approved job). The owner pays the Handwerker through us (because we keep the deposit on hold until the job is done, which protects them from no-shows). Both flows are auditable in Supabase, both fire in under two minutes.
 
 **Why this lights up all three sponsor tracks:**
 - **ElevenLabs** — multi-agent parallel conversational AI in German with structured tool calls
@@ -228,14 +228,14 @@ Built at the HalloTheo Hackathon in Berlin, 2026, by a two-person team combining
 ### Ian Baumeister — Product, Strategy & Full-Stack Build
 [GitHub `@ibxibx`](https://github.com/ibxibx) · [LinkedIn](https://www.linkedin.com/in/avoian/) · Berlin, DE
 
-Founder and CEO of [AVO Group](https://avotravel.com) (since 2013), Head of Design & Marketing at [DIAMONDSITE.DE](https://diamondsite.de). Background spans real estate, travel-tech, and marketing operations, with a long track record of building startups at the intersection of physical space and digital product. Recent technical work includes the **Jasmin Catering AI Agent** (collaborative AI agent project) and a React Native chat app ([`ibxibx/nextchat`](https://github.com/ibxibx/nextchat)). For NeoTheo: product vision, system architecture, API + dashboard implementation, hackathon pitch.
+Founder and CEO of [AVO Group](https://avotravel.com) (since 2013) and full-stack developer at [ianworks.dev](https://ianworks.dev). Background spans real estate, travel-tech, and marketing operations, with a long track record of building startups at the intersection of physical space and digital product. Recent technical work includes the **Jasmin Catering AI Agent** (collaborative AI agent project) and a React Native chat app ([`ibxibx/nextchat`](https://github.com/ibxibx/nextchat)). For **neo-theo**: product vision, system architecture, API + dashboard implementation, hackathon pitch.
 
 ### Soheil Fathalian — Technical Co-Lead & Concept Architect
 [GitHub `@soheilfathalian`](https://github.com/soheilfathalian) · [LinkedIn](https://www.linkedin.com/in/soheil-fathalian-2000/) · Berlin, DE
 
-Technical Entrepreneur in Residence at **[yoursquares GmbH](https://yoursquares.de)** (PropTech, Berlin), where he works on early-stage technical product development at the intersection of real estate and emerging technology. For NeoTheo: concept architecture, multi-agent design exploration, vendor-side integration logic (Stripe Connect dispatch, Handwerker negotiation flows), and the longer-term "Property Soul" / synthetic-Verwalter framing that informs the 5-year vision.
+Technical Entrepreneur in Residence at **[yoursquares GmbH](https://yoursquares.de)** (PropTech, Berlin), where he works on early-stage technical product development at the intersection of real estate and emerging technology. For **neo-theo**: concept architecture, multi-agent design exploration, vendor-side integration logic (Stripe Connect dispatch, Handwerker negotiation flows), and the longer-term "Property Soul" / synthetic-Verwalter framing that informs the 5-year vision.
 
-> The team's complementary backgrounds — Ian's real-estate-meets-product founding experience and Soheil's PropTech-native technical entrepreneurship — are why NeoTheo is built on a deep, lived understanding of the actual problem space, not a generic "AI for X" pitch.
+> The team's complementary backgrounds — Ian's real-estate-meets-product founding experience and Soheil's PropTech-native technical entrepreneurship — are why **neo-theo** is built on a deep, lived understanding of the actual problem space, not a generic "AI for X" pitch.
 
 ---
 

@@ -1,4 +1,4 @@
-# 🏛️ NeoTheo — Architecture
+# 🏛️ **neo-theo** — Architecture
 
 ## End-to-End Call Flow
 
@@ -12,7 +12,7 @@
    - Listens to the problem
         │
         ▼
-3. ElevenLabs streams transcript to NeoTheo API (webhook)
+3. ElevenLabs streams transcript to neo-theo API (webhook)
    - POST /webhooks/elevenlabs/transcript
    - Payload: { call_id, tenant_phone, transcript, audio_url }
         │
@@ -156,7 +156,7 @@ See [`URGENCY_RULES.md`](./URGENCY_RULES.md) for the full prompt.
 
 When `urgency = HIGH`, the dispatch path branches into the **Theo Negotiates** subsystem — a parallel multi-agent voice auction wired into a **two-sided Stripe marketplace**:
 
-- **Vendor-side flow** (NeoTheo's revenue): Handwerker pays NeoTheo a % lead fee on win, via off-session PaymentIntent on their stored Customer.
+- **Vendor-side flow** (**neo-theo**'s revenue): Handwerker pays **neo-theo** a % lead fee on win, via off-session PaymentIntent on their stored Customer.
 - **Owner-side flow** (job payment): Owner pays Handwerker via Stripe Connect destination charge — deposit on consent, final amount on job completion.
 
 Both flows fire on a single auction win. Full spec, demo script, and guardrails in [`THEO_NEGOTIATES.md`](./THEO_NEGOTIATES.md). Schema additions:
@@ -164,7 +164,7 @@ Both flows fire on a single auction win. Full spec, demo script, and guardrails 
 ```sql
 -- handwerker gains dual Stripe identity + lead-fee config
 ALTER TABLE handwerker
-    ADD COLUMN stripe_customer_id            TEXT,       -- NeoTheo's customer (we charge them)
+    ADD COLUMN stripe_customer_id            TEXT,       -- neo-theo's customer (we charge them)
     ADD COLUMN stripe_default_payment_method TEXT,       -- card / SEPA on file
     ADD COLUMN stripe_account_id             TEXT,       -- Connect Custom (owner pays them)
     ADD COLUMN lead_fee_pct                  NUMERIC(5,2) DEFAULT 10.00,

@@ -39,7 +39,7 @@ DATABASE_URL=postgres://...
   "ended_at": "2026-05-23T14:35:47Z",
   "caller_number": "+4915112345678",
   "transcript": [
-    { "role": "agent", "text": "Hallo, hier ist NeoTheo...", "ts": 0.5 },
+    { "role": "agent", "text": "Hallo, hier ist neo-theo...", "ts": 0.5 },
     { "role": "user",  "text": "Mein Wasserhahn tropft...", "ts": 4.2 }
   ],
   "audio_url": "https://storage.elevenlabs.io/conv_abc123.mp3"

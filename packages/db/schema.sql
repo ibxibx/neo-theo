@@ -1,4 +1,4 @@
--- NeoTheo schema
+-- neo-theo schema
 -- Postgres 15+ with pgvector extension
 
 CREATE EXTENSION IF NOT EXISTS vector;
@@ -78,7 +78,7 @@ CREATE TABLE handwerker (
     email           TEXT,
     on_call         BOOLEAN DEFAULT TRUE,
     -- Theo Negotiates: dual Stripe identity (two-sided marketplace)
-    stripe_customer_id          TEXT,                -- Handwerker as NeoTheo's customer (we charge lead fees)
+    stripe_customer_id          TEXT,                -- Handwerker as neo-theo's customer (we charge lead fees)
     stripe_default_payment_method TEXT,              -- on-file card / SEPA mandate for auto-charge
     stripe_account_id           TEXT,                -- Custom Connect account (owner pays them through us)
     lead_fee_pct                NUMERIC(5,2) DEFAULT 10.00,  -- % of winning bid billed to Handwerker
@@ -178,9 +178,9 @@ CREATE INDEX idx_payouts_auction ON payouts(auction_id);
 CREATE INDEX idx_payouts_status ON payouts(status);
 
 CREATE TABLE vendor_charges (
-    -- LEAD-FEE FLOW: NeoTheo bills Handwerker when they win an auction.
+    -- LEAD-FEE FLOW: neo-theo bills Handwerker when they win an auction.
     -- Off-session PaymentIntent on Handwerker's stripe_customer_id (card / SEPA on file).
-    -- This is the "automatic payout for the service" that NeoTheo provides.
+    -- This is the "automatic payout for the service" that neo-theo provides.
     id                      UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     auction_id              UUID NOT NULL REFERENCES auctions(id),
     bid_id                  UUID NOT NULL REFERENCES bids(id),

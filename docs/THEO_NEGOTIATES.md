@@ -1,15 +1,15 @@
 # 🎙️ Theo Negotiates — Multi-Agent Vendor Auction
 
 > **The HIGH-urgency dispatch upgrade.**
-> When triage classifies an inquiry as HIGH (e.g., *Heizung defekt im Winter*, active leak, gas smell), NeoTheo doesn't just text one Handwerker. It runs a **parallel voice auction**: three AI agents call three vendors simultaneously, negotiate price and earliest slot in German, pick the winner, and trigger a Stripe Connect deposit — all with the owner's one-tap consent.
+> When triage classifies an inquiry as HIGH (e.g., *Heizung defekt im Winter*, active leak, gas smell), **neo-theo** doesn't just text one Handwerker. It runs a **parallel voice auction**: three AI agents call three vendors simultaneously, negotiate price and earliest slot in German, pick the winner, and trigger a Stripe Connect deposit — all with the owner's one-tap consent.
 
-This is the spectacle layer on top of the standard NeoTheo dispatch flow. It is **only** invoked for `urgency = HIGH`.
+This is the spectacle layer on top of the standard **neo-theo** dispatch flow. It is **only** invoked for `urgency = HIGH`.
 
 ---
 
 ## 🎯 Why This Exists
 
-The current NeoTheo HIGH path is: *classify → notify on-call Handwerker → done*. That's correct, but it leaves three real problems on the table:
+The current **neo-theo** HIGH path is: *classify → notify on-call Handwerker → done*. That's correct, but it leaves three real problems on the table:
 
 1. **Single point of failure** — if the first Handwerker doesn't pick up, the tenant waits.
 2. **No price discovery** — the property owner pays whatever the on-call vendor charges, with no competition.
@@ -23,7 +23,7 @@ Theo Negotiates fixes all three in one move: **parallel outbound calls, live voi
 
 ```
                 ┌───────────────────────────────────────┐
-                │ NeoTheo Triage Layer                  │
+                │ neo-theo Triage Layer                 │
                 │ urgency = HIGH, category = "heating"  │
                 └────────────────┬──────────────────────┘
                                  │
@@ -75,7 +75,7 @@ Theo Negotiates fixes all three in one move: **parallel outbound calls, live voi
                 ▼                                 ▼
    ┌────────────────────┐            ┌────────────────────┐
    │ Stripe Connect:    │            │ Fall back to       │
-   │ - 30% deposit to   │            │ standard NeoTheo   │
+   │ - 30% deposit to   │            │ standard neo-theo  │
    │   vendor on-hold   │            │ HIGH path (manual  │
    │ - full payment on  │            │ dispatch to staff) │
    │   resolution       │            └────────────────────┘
@@ -93,16 +93,16 @@ Theo Negotiates fixes all three in one move: **parallel outbound calls, live voi
 
 ## 🔁 End-to-End Flow
 
-1. **Trigger.** NeoTheo triage layer classifies an inquiry as `HIGH` and emits an `auction.requested` event with `{inquiry_id, category, building, problem_summary}`.
+1. **Trigger.** **neo-theo** triage layer classifies an inquiry as `HIGH` and emits an `auction.requested` event with `{inquiry_id, category, building, problem_summary}`.
 2. **Vendor selection.** Auction Orchestrator queries the `handwerker` table for the top N (default 3) vendors matching `category`, ranked by `on_call = true`, then `reputation_score DESC`. Only vendors with `consents_to_ai_calls = true` AND `consents_to_auto_lead_fee = true` are eligible.
 3. **Brief generation.** Claude produces a short German-language negotiation brief: problem, address, desired window, max budget (from owner policy), allowed deviations.
 4. **Parallel auction sessions.** Three ElevenLabs Conversational AI sessions are spawned in parallel as live agent panels in the dashboard. Each session is loaded with the brief and a `submit_bid` tool. *(Note: per [mentor guidance](./WYNAND_FEEDBACK.md), the hackathon demo simulates these as parallel web sessions rather than placing real outbound phone calls. The architecture supports both — see "Phase 2" below.)*
-5. **Live negotiation.** Each agent introduces itself as calling on behalf of *hallo theo*, states the problem, asks for **price** and **earliest available slot**. The agent discloses up front that NeoTheo charges a lead fee (e.g. 10%) if they win, so the vendor can factor it into their bid.
+5. **Live negotiation.** Each agent introduces itself as calling on behalf of *hallo theo*, states the problem, asks for **price** and **earliest available slot**. The agent discloses up front that **neo-theo** charges a lead fee (e.g. 10%) if they win, so the vendor can factor it into their bid.
 6. **Bid extraction.** On hangup, the agent calls `submit_bid(price_eur, slot_iso, confidence, transcript_id)`. Voicemail or no-pickup → `submit_bid(null, null, 0, transcript_id)` with `reason = "no_answer"`.
 7. **Resolution.** Auction Resolver waits up to `auction_timeout_s` (default 90s), then scores bids using `score = w1 * (1/price) + w2 * (1/eta_hours) + w3 * reputation`. Winner picked.
-8. **Owner consent.** Push notification (Stripe-hosted approval link or SMS with one-tap URL) sent to the property owner. Payload: vendor name, bid price, slot, **deposit amount the owner will be charged**. (The lead fee charged to the Handwerker is *not* shown to the owner — it's between NeoTheo and the vendor.)
+8. **Owner consent.** Push notification (Stripe-hosted approval link or SMS with one-tap URL) sent to the property owner. Payload: vendor name, bid price, slot, **deposit amount the owner will be charged**. (The lead fee charged to the Handwerker is *not* shown to the owner — it's between **neo-theo** and the vendor.)
 9. **Two parallel Stripe operations on approval:**
-   - **9a. Lead fee charge to Handwerker** (vendor-side flow): off-session `PaymentIntent` on the Handwerker's `stripe_customer_id`, amount = `winning_bid * lead_fee_pct / 100`. This is NeoTheo's revenue — *"automatic payout for the service"*.
+   - **9a. Lead fee charge to Handwerker** (vendor-side flow): off-session `PaymentIntent` on the Handwerker's `stripe_customer_id`, amount = `winning_bid * lead_fee_pct / 100`. This is **neo-theo**'s revenue — *"automatic payout for the service"*.
    - **9b. Deposit hold from owner** (owner-side flow): `PaymentIntent` with `transfer_data[destination] = handwerker.stripe_account_id`, `capture_method = manual`, amount = 30% of bid. Released to vendor on job completion.
 10. **Tenant confirmation.** Confirmation message rendered in the tenant's dashboard view (and optionally sent via email): *"Der Klempner kommt morgen um 9 Uhr."* (Phase-2: outbound voice confirmation via ElevenLabs + Twilio.)
 
@@ -142,7 +142,7 @@ New tables added to `packages/db/schema.sql` (see also `docs/ARCHITECTURE.md`):
 - **`bids`** — one row per outbound call leg; null `price_eur` for no-answer / voicemail
 - **`owner_consents`** — owner approval audit trail (regulatory + dispute resolution)
 - **`payouts`** — *owner-side flow:* Stripe Connect deposit + final-payment events (owner pays Handwerker)
-- **`vendor_charges`** — *vendor-side flow:* lead fee charged to Handwerker on win (NeoTheo's revenue)
+- **`vendor_charges`** — *vendor-side flow:* lead fee charged to Handwerker on win (**neo-theo**'s revenue)
 - **`handwerker`** gets new columns: `stripe_customer_id`, `stripe_default_payment_method`, `stripe_account_id`, `lead_fee_pct`, `reputation_score`, `max_concurrent_jobs`, `consents_to_ai_calls`, `consents_to_auto_lead_fee`
 
 See **§ "Theo Negotiates additions"** in `docs/ARCHITECTURE.md` for the full DDL.
@@ -232,7 +232,7 @@ These are non-negotiable. Implementing the auction without them is irresponsible
 |---|---|
 | **ElevenLabs** | Multi-agent parallel Conversational AI sessions, live German negotiation, structured tool use (`submit_bid`), end-to-end transcripts logged to Supabase. Real outbound telephony is a Phase-2 item (architecture supports it; demo skips it on mentor guidance). |
 | **Anthropic** | Claude as the orchestrator: vendor selection, negotiation brief generation, bid scoring, owner-consent message drafting, full reasoning trace logged |
-| **Stripe** | **Two-sided marketplace done right:** (1) off-session billing of vendors via Customer + saved payment method (NeoTheo's revenue, "automatic payout for the service"), (2) Connect Custom accounts for owner→vendor deposit holds and conditional payouts. Both flows fire on a single auction win, both auditable end-to-end. |
+| **Stripe** | **Two-sided marketplace done right:** (1) off-session billing of vendors via Customer + saved payment method (**neo-theo**'s revenue, "automatic payout for the service"), (2) Connect Custom accounts for owner→vendor deposit holds and conditional payouts. Both flows fire on a single auction win, both auditable end-to-end. |
 
 ---
 

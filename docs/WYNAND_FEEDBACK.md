@@ -1,6 +1,6 @@
 # Wynand Viljoen — Technical Mentor Feedback (Pre-Hackathon)
 
-> Recorded discussion between Ian Baumeister (NeoTheo) and Wynand Viljoen (technical mentor, HalloTheo Hackathon). May 23, 2026.
+> Recorded discussion between Ian Baumeister (**neo-theo**) and Wynand Viljoen (technical mentor, HalloTheo Hackathon). May 23, 2026.
 >
 > This document captures the verbatim transcript and the concrete decisions extracted from it. It is the authoritative reference for *scope* — i.e., what we are and aren't building for the hackathon demo.
 
@@ -8,7 +8,7 @@
 
 ## TL;DR — Decisions from this conversation
 
-| Topic | Wynand's verdict | NeoTheo response |
+| Topic | Wynand's verdict | **neo-theo** response |
 |---|---|---|
 | **Real phone number / Twilio** | Won't get one in time. Skip. | ✅ Twilio dropped from MVP scope. Auction calls simulated as parallel web sessions in the dashboard. Removed from `.env.example` and tech stack. |
 | **Demo input mechanism** | Use the existing "hello theo" landing page with a green button — web-based call to the ElevenLabs agent | ✅ Confirmed: web call, no telephony layer for the demo |

@@ -1,4 +1,4 @@
-# NeoTheo Dashboard
+# **neo-theo** Dashboard
 
 Next.js 14 staff dashboard. Lists every call, its transcript, the AI's classification, and the dispatch action.
 

@@ -1,6 +1,6 @@
 # Inquiry Categories & Standard Action Sequences
 
-> Authoritative source for: how NeoTheo classifies inquiries, and what the system automatically does for each class.
+> Authoritative source for: how **neo-theo** classifies inquiries, and what the system automatically does for each class.
 >
 > Designed after [Jan @ Hallo Theo's feedback](./JAN_FEEDBACK.md), specifically to mirror Hallo Theo's actual two-tier human structure (Servicer → Property Manager) and to honor the design tension Jan named: *"How far can you push autonomy when you want human-in-the-loop?"*
 
@@ -34,12 +34,12 @@ Urgency answers *"when does this need to be handled?"*. Action class answers *"w
 
 | Class | Who / what handles it | Human-in-loop? |
 |---|---|---|
-| 🤖 **`AUTO_RESOLVE`** | NeoTheo handles end-to-end — DIY guide, FAQ answer, document re-send | No (audit-logged only) |
+| 🤖 **`AUTO_RESOLVE`** | **neo-theo** handles end-to-end — DIY guide, FAQ answer, document re-send | No (audit-logged only) |
 | 👤 **`SERVICER_QUEUE`** | Routed to the generalist Servicer queue (front-line human staff) | Yes (within 8h) |
 | 🏠 **`PROPERTY_MANAGER`** | Routed to the specific PM for that property | Yes (the named PM) |
 | 💰 **`OWNER_APPROVAL`** | Requires explicit owner sign-off (above-budget repair, structural decision) | Yes (owner directly) |
 | 🚨 **`EMERGENCY_DISPATCH`** | Bypass triage queue; trigger emergency vendor + notify PM + notify owner in parallel | Yes (parallel notification, not blocking) |
-| 📚 **`KNOWLEDGE_CAPTURE_REQUIRED`** | Modifier flag, NOT a destination. When this fires, after the inquiry is resolved by a human, NeoTheo prompts them with: *"What did you do? Who did you call? Save to property knowledge?"* — and writes the answer into the property's knowledge graph. | After-the-fact, 30 seconds |
+| 📚 **`KNOWLEDGE_CAPTURE_REQUIRED`** | Modifier flag, NOT a destination. When this fires, after the inquiry is resolved by a human, **neo-theo** prompts them with: *"What did you do? Who did you call? Save to property knowledge?"* — and writes the answer into the property's knowledge graph. | After-the-fact, 30 seconds |
 
 The `KNOWLEDGE_CAPTURE_REQUIRED` modifier is **the strategic killer feature for Hallo Theo** — it operationalizes Jan's insight #3 about extracting "tested knowledge" from PMs' heads.
 
@@ -128,7 +128,7 @@ Each (Urgency, Action Class) combination triggers a defined sequence the system 
 
 This isn't a standalone class. When any inquiry resolves with `knowledge_capture_required = true`, the system:
 
-1. After the human (PM or Servicer) marks the ticket resolved, NeoTheo posts a single Slack DM:
+1. After the human (PM or Servicer) marks the ticket resolved, **neo-theo** posts a single Slack DM:
    *"Quick: what did you do for [Tenant], property [Friedrichstraße 12], issue [elevator slow]? Who did you contact? Anything future you/we should remember? (30s answer is fine — voice note OK.)"*
 2. The reply (text or transcribed voice) is parsed by Claude and written to `property_knowledge.entries` with embeddings
 3. Future inquiries on the same property → that knowledge is surfaced to whoever takes the next call

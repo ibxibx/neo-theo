@@ -1,12 +1,12 @@
 # Jan @ Hallo Theo — Customer Feedback Session
 
-> Recorded discussion between Ian Baumeister (NeoTheo) and Jan (Hallo Theo, founding team). May 23, 2026 — during the hackathon. WhatsApp audio recording 15:46:48.
+> Recorded discussion between Ian Baumeister (**neo-theo**) and Jan (Hallo Theo, founding team). May 23, 2026 — during the hackathon. WhatsApp audio recording 15:46:48.
 >
 > This is the most strategically important input we've received. Jan is **the actual customer**. Every design decision after this point is judged against whether it would make Jan say "yes, that's what we'd want."
 
 ---
 
-## TL;DR — The 11 Insights That Should Reshape NeoTheo
+## TL;DR — The 11 Insights That Should Reshape **neo-theo**
 
 | # | Insight | Direct Impact on the Build |
 |---|---|---|
@@ -42,9 +42,9 @@ This is *exactly* the kind of nuance that distinguishes a thoughtful PropTech bu
 
 Theo Negotiates remains in the architecture and the schema. But the framing changes:
 
-**Before Jan's feedback:** *"NeoTheo runs parallel auctions to dispatch Handwerker."*
+**Before Jan's feedback:** *"**neo-theo** runs parallel auctions to dispatch Handwerker."*
 
-**After Jan's feedback:** *"NeoTheo's triage layer handles the 70% of inquiries that don't need humans. For the remaining 30% — particularly HIGH-urgency dispatch — we show what auto-negotiation could look like (Theo Negotiates), with explicit owner-consent and budget guardrails matching HalloTheo's actual approval rules."*
+**After Jan's feedback:** *"**neo-theo**'s triage layer handles the 70% of inquiries that don't need humans. For the remaining 30% — particularly HIGH-urgency dispatch — we show what auto-negotiation could look like (Theo Negotiates), with explicit owner-consent and budget guardrails matching HalloTheo's actual approval rules."*
 
 Jan also explicitly noted that "getting offers in" (auction-style dispatch) was *"one thing to look into. That's interesting."* — so it's not dismissed, just sequenced.
 
@@ -52,7 +52,7 @@ Jan also explicitly noted that "getting offers in" (auction-style dispatch) was 
 
 ## Verbatim Transcript
 
-> Source: WhatsApp audio recording, 2026-05-23 15:46:48. Speakers: **J** = Jan (Hallo Theo), **I** = Ian (NeoTheo). Transcript produced via external AI summarizer; minor recognized errors noted [in brackets]. Original audio is the source of truth.
+> Source: WhatsApp audio recording, 2026-05-23 15:46:48. Speakers: **J** = Jan (Hallo Theo), **I** = Ian (**neo-theo**). Transcript produced via external AI summarizer; minor recognized errors noted [in brackets]. Original audio is the source of truth.
 
 ---
 
