@@ -17,15 +17,15 @@ HalloTheo's mandate: build the **futuristic tech solution** — what will be eff
 
 ## 🧠 How It Works
 
-1. **Tenant calls** the HalloTheo number.
-2. **ElevenLabs Conversational AI agent** picks up and has a natural conversation.
-3. The agent **transcribes** every word in real time.
-4. An **AI classification layer** decides urgency: `LOW` / `MEDIUM` / `HIGH`.
+1. **Tenant initiates contact** via the hallo theo landing page (green-button web call — per [Wynand's guidance](./docs/WYNAND_FEEDBACK.md), no real telephone number is needed for the demo).
+2. **ElevenLabs Conversational AI agent** picks up and has a natural conversation in the tenant's language.
+3. The agent **transcribes** every word in real time and posts the final transcript to a **Supabase** webhook at end-of-call.
+4. An **AI classification layer** (Claude) decides urgency: `LOW` / `MEDIUM` / `HIGH`.
 5. The system **dispatches** the correct response:
    - 🟢 **LOW** → SMS/email with DIY guide (article + YouTube link)
    - 🟡 **MEDIUM** → Forward to human staff with full context summary
-   - 🔴 **HIGH** → **Theo Negotiates** kicks in — parallel voice auction with 3 Handwerker, owner-consented Stripe deposit, tenant confirmation call ([full spec](./docs/THEO_NEGOTIATES.md))
-6. **Everything is logged** — full transcript, classification, dispatch action, auction bids, payouts — into the tenant's file, indexed by tenant ID / contract number.
+   - 🔴 **HIGH** → **Theo Negotiates** kicks in — simulated parallel auction with 3 Handwerker, owner-consented Stripe deposit, tenant confirmation ([full spec](./docs/THEO_NEGOTIATES.md))
+6. **Everything is logged in Supabase** — full transcript, classification, dispatch action, auction bids, payouts — indexed by tenant ID / contract number.
 
 ---
 
@@ -33,18 +33,20 @@ HalloTheo's mandate: build the **futuristic tech solution** — what will be eff
 
 ```
    ┌─────────────┐        ┌────────────────────┐        ┌──────────────────┐
-   │   Tenant    │ ─call─▶│ ElevenLabs Agent   │───────▶│  NeoTheo API     │
-   │  (phone)    │        │ (voice + STT/TTS)  │        │  (FastAPI/Node)  │
+   │   Tenant    │─green ▶│ ElevenLabs Agent   │───────▶│  NeoTheo API     │
+   │ (web call)  │ button │ (voice + STT/TTS)  │ webhook│  (FastAPI/Node)  │
    └─────────────┘        └────────────────────┘        └────────┬─────────┘
                                                                   │
                           ┌───────────────────────────────────────┤
                           ▼                                       ▼
                 ┌──────────────────┐                  ┌────────────────────┐
-                │ AI Triage Layer  │                  │   Database         │
-                │ (Claude/GPT)     │                  │ (Postgres + vector)│
+                │ AI Triage Layer  │                  │   Supabase         │
+                │ (Claude)         │                  │ (Postgres+Realtime)│
                 │ - classify       │                  │ - tenants          │
                 │ - extract intent │                  │ - calls/transcripts│
                 │ - match KB       │                  │ - dispatch log     │
+                │                  │                  │ - auctions, bids   │
+                │                  │                  │ - payouts/charges  │
                 └────────┬─────────┘                  └────────────────────┘
                          │
         ┌────────────────┼────────────────┐
@@ -52,22 +54,22 @@ HalloTheo's mandate: build the **futuristic tech solution** — what will be eff
    ┌─────────┐      ┌─────────┐      ┌──────────────────────┐
    │ LOW     │      │ MEDIUM  │      │ HIGH                 │
    │ DIY     │      │ Human   │      │ ▶ Theo Negotiates    │
-   │ guide   │      │ staff   │      │   parallel auction   │
-   │ (SMS)   │      │ queue   │      │   3× outbound calls  │
+   │ guide   │      │ staff   │      │   simulated auction  │
+   │ (SMS)   │      │ queue   │      │   3× EL agent panels │
    │         │      │         │      │   → bids → owner OK  │
-   │         │      │         │      │   → Stripe deposit   │
+   │         │      │         │      │   → 2× Stripe events │
    └─────────┘      └─────────┘      └──────────┬───────────┘
                                                 │
                                      ┌──────────┴───────────┐
                                      │ Vendor wins → tenant │
                                      │ gets confirmation    │
-                                     │ call (EL outbound)   │
+                                     │ (web agent voice)    │
                                      └──────────────────────┘
 
                 ┌──────────────────┐
-                │  Staff Dashboard │  ← real-time view of all calls,
-                │  (Next.js)       │     transcripts, dispatches,
-                │                  │     auctions, bids, payouts
+                │  Staff Dashboard │  ← real-time view (Supabase Realtime)
+                │  (Next.js)       │     of calls, transcripts, dispatches,
+                │                  │     auctions, bids, payouts, charges
                 └──────────────────┘
 ```
 
@@ -77,17 +79,17 @@ HalloTheo's mandate: build the **futuristic tech solution** — what will be eff
 
 | Layer | Technology | Why |
 |---|---|---|
-| **Voice (intake)** | ElevenLabs Conversational AI | Natural, multilingual voice agent (required by Track 1) |
-| **Voice (negotiator)** | ElevenLabs Conversational AI + Twilio outbound | Parallel outbound calls to Handwerker for the **Theo Negotiates** auction; agent has a `submit_bid` tool |
+| **Voice (intake)** | ElevenLabs Conversational AI (web SDK, green-button on landing page) | Natural, multilingual voice agent. Per [mentor guidance](./docs/WYNAND_FEEDBACK.md), web-based call is sufficient for demo — no phone number / Twilio needed. |
+| **Voice (negotiator)** | ElevenLabs Conversational AI (3 parallel web sessions simulated in dashboard) | Auction shown as 3 simulated agent panels with live bid extraction. Real outbound telephony is a Phase-2 item (would require Twilio + provisioned number). |
 | **AI Triage & Orchestrator** | Claude Sonnet 4.6 (`claude-sonnet-4-6`) | Fast, cheap, smart enough for structured JSON classification + auction brief generation + bid scoring. Swap to Haiku 4.5 (`claude-haiku-4-5`) at scale, or Opus 4.7 (`claude-opus-4-7`) for hard cases. |
-| **Backend API** | FastAPI (Python) *or* Node/Express | Async, fast, ElevenLabs webhook-friendly |
-| **Database** | PostgreSQL + pgvector | Relational data + semantic search over past calls |
-| **Knowledge Base** | Markdown + vector embeddings | DIY guides, YouTube links, articles, all searchable |
-| **Dashboard** | Next.js 14 + Tailwind + shadcn/ui | Real-time staff view, clean and modern |
-| **Notifications** | Twilio (SMS) + SendGrid (email) | Dispatch to tenants and Handwerker |
+| **Backend API** | FastAPI (Python) *or* Node | Async, fast, ElevenLabs webhook-friendly |
+| **Database + Auth + Realtime** | **Supabase** (Postgres 15 + pgvector + Realtime + Row-Level Security) | Single platform for triage logs, transcripts, dispatch records, Stripe webhook payloads — chosen on mentor recommendation. Realtime channels drive the dashboard live; RLS scopes tenant data. |
+| **Knowledge Base** | Markdown + pgvector embeddings in Supabase | DIY guides, YouTube links, articles, all semantically searchable |
+| **Dashboard** | Next.js 14 + Tailwind + shadcn/ui + `@supabase/realtime-js` | Real-time staff view: live transcript stream, auction panels, Stripe events |
+| **Notifications** | SendGrid (email DIY guides) | Email dispatch to tenants |
 | **Payments** | **Stripe — two-sided marketplace** | (1) Stripe Customer + off-session billing → NeoTheo charges Handwerker a 10% lead fee on win. (2) Stripe Connect (Custom accounts) → owner pays Handwerker via destination charges with a 30% deposit hold on consent, full release on completion. Both flows fire on a single auction win. |
-| **Hosting** | Vercel (dashboard) + Railway/Fly.io (API+DB) | Fast hackathon deploy |
-| **Auth** | Clerk or Supabase Auth | Staff login |
+| **Hosting** | Local (per mentor guidance) — production: Vercel + Supabase Cloud | Local-only for demo. Supabase Cloud takes the DB + Auth + Realtime concerns off the deployment surface. |
+| **Auth** | Supabase Auth | Staff login; ships with the DB |
 
 ---
 
@@ -106,8 +108,9 @@ neotheo/
 │   ├── ARCHITECTURE.md
 │   ├── URGENCY_RULES.md
 │   ├── THEO_NEGOTIATES.md   # ★ HIGH-urgency multi-agent vendor auction
+│   ├── WYNAND_FEEDBACK.md   # technical mentor scope decisions (Twilio out, Supabase in)
 │   └── ELEVENLABS_SETUP.md
-└── infra/                # Docker, deployment configs
+└── infra/                # Local dev configs
 ```
 
 ---
@@ -118,19 +121,19 @@ When the triage layer classifies an inquiry as `HIGH` (active leak, no heat in w
 
 **What happens:**
 1. The orchestrator (Claude) picks 3 Handwerker matching the category and writes a German negotiation brief
-2. Three ElevenLabs Conversational AI agents place **parallel outbound calls** via Twilio
+2. Three ElevenLabs Conversational AI sessions run **in parallel** as live agent panels in the dashboard (no telephony — per [mentor guidance](./docs/WYNAND_FEEDBACK.md), the demo simulates the calls visually rather than placing real outbound calls)
 3. Each agent discloses the lead fee up front, negotiates price and earliest slot, then calls `submit_bid(price, slot, confidence)`
-4. After all legs return (or timeout), the resolver scores bids on `price × ETA × reputation` and picks a winner
+4. After all sessions return (or timeout), the resolver scores bids on `price × ETA × reputation` and picks a winner
 5. The property owner gets a one-tap consent push: *"Approve Müller Klempnerei, €480, tomorrow 9 AM?"*
 6. On approval, **two Stripe operations fire in parallel:**
    - **Vendor → NeoTheo:** off-session 10% lead fee charged to the Handwerker's card/SEPA on file (NeoTheo's revenue — *"automatic payout for the service"*)
    - **Owner → Vendor (via Connect):** 30% deposit hold on the owner; full amount released on job completion
-7. The tenant gets an outbound confirmation call from ElevenLabs
+7. The tenant receives a confirmation message (web agent voice replay or SMS — demo flexible)
 
-**Two-sided marketplace, one win.** The Handwerker pays NeoTheo for the lead (because we just brought them a qualified, owner-approved job). The owner pays the Handwerker through us (because we keep the deposit on hold until the job is done, which protects them from no-shows). Both flows are auditable, both are demoable in under two minutes.
+**Two-sided marketplace, one win.** The Handwerker pays NeoTheo for the lead (because we just brought them a qualified, owner-approved job). The owner pays the Handwerker through us (because we keep the deposit on hold until the job is done, which protects them from no-shows). Both flows are auditable in Supabase, both fire in under two minutes.
 
 **Why this lights up all three sponsor tracks:**
-- **ElevenLabs** — parallel conversational agents, outbound dialing, German negotiation, tool use
+- **ElevenLabs** — multi-agent parallel conversational AI in German with structured tool calls
 - **Anthropic** — Claude as the orchestrator: vendor selection, brief generation, bid scoring
 - **Stripe** — Customer-side off-session billing (lead fee) + Connect Custom destination charges (owner deposit) — a real two-sided marketplace, not a one-flow demo
 
@@ -172,12 +175,15 @@ cd apps/api && pip install -r requirements.txt
 # 3. Env
 cp .env.example .env
 # Fill in: ELEVENLABS_API_KEY, ELEVENLABS_NEGOTIATOR_AGENT_ID,
-#          ANTHROPIC_API_KEY, DATABASE_URL, TWILIO_*, STRIPE_*
+#          ANTHROPIC_API_KEY, SUPABASE_*, STRIPE_*
 
-# 4. Run
-docker compose up -d postgres      # spin up DB
-cd apps/api && uvicorn main:app --reload
-cd apps/dashboard && pnpm dev
+# 4. Spin up Supabase locally (or use Supabase Cloud)
+npx supabase start                          # local stack (Docker)
+npx supabase db push                        # apply packages/db/schema.sql
+
+# 5. Run
+cd apps/api && uvicorn main:app --reload    # backend on :8000
+cd apps/dashboard && pnpm dev               # dashboard on :3000
 ```
 
 ---

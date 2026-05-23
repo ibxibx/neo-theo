@@ -10,16 +10,16 @@
 
 | Topic | Wynand's verdict | NeoTheo response |
 |---|---|---|
-| **Real phone number / Twilio** | Won't get one in time. Skip. | Twilio dropped from MVP scope. Auction calls simulated in the dashboard. |
-| **Demo input mechanism** | Use the existing "hello theo" landing page with a green button — web-based call to the ElevenLabs agent | Confirmed: web call, no telephony layer for the demo |
-| **Database** | Supabase | (Decision pending — see questions log) |
-| **LLM for triage** | Anthropic / Claude — yes | Confirmed |
-| **Transcript timing** | Post-call is sufficient | No mid-call streaming triage in scope |
-| **Dynamic context per call** | Not needed for demo | Dropped |
-| **Deployment** | Can run locally | No deployment pressure |
-| **Submission** | GitHub push is sufficient | Already done (this repo) |
-| **Code reuse from before event** | Allowed | Confirms today's scaffolding is fair game |
-| **Rate limits** | None to worry about | No concern |
+| **Real phone number / Twilio** | Won't get one in time. Skip. | ✅ Twilio dropped from MVP scope. Auction calls simulated as parallel web sessions in the dashboard. Removed from `.env.example` and tech stack. |
+| **Demo input mechanism** | Use the existing "hello theo" landing page with a green button — web-based call to the ElevenLabs agent | ✅ Confirmed: web call, no telephony layer for the demo |
+| **Database** | Supabase | ✅ Adopted. README tech stack, `.env.example`, Quick Start, and architecture diagram updated. Postgres + pgvector remain (Supabase runs both); Realtime + RLS + Supabase Auth added. |
+| **LLM for triage** | Anthropic / Claude — yes | ✅ Confirmed (Claude Sonnet 4.6) |
+| **Transcript timing** | Post-call is sufficient | ✅ No mid-call streaming triage in scope |
+| **Dynamic context per call** | Not needed for demo | ✅ Dropped from MVP |
+| **Deployment** | Can run locally | ✅ Quick Start updated for local-only (`npx supabase start`) |
+| **Submission** | GitHub push is sufficient | ✅ Already done (this repo) |
+| **Code reuse from before event** | Allowed | ✅ Confirms today's scaffolding is fair game |
+| **Rate limits** | None to worry about | ✅ No concern |
 | **Judging rubric specifics** | He doesn't have details | Will ask judges directly |
 | **ElevenLabs engineer presence** | "Nobody from 11 here" | Self-serve via docs |
 
