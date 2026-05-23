@@ -15,17 +15,36 @@ HalloTheo's mandate: build the **futuristic tech solution** — what will be eff
 
 ---
 
+## 👂 Customer Insight (Jan @ Hallo Theo, in person)
+
+We sat with **Jan from Hallo Theo** on hackathon day. The full transcript and extracted insights are in [`docs/JAN_FEEDBACK.md`](./docs/JAN_FEEDBACK.md). The headlines:
+
+- **"Triage and negotiation are two distinct problems."** → Triage is the demo; Theo Negotiates is the Phase-2 framing
+- **"Peace of mind"** is the customer-side value — *"I want to know it's being handled, I don't need to chase."* → Our dashboard language reflects this
+- **Today: two-tier humans** — generalist Servicer → property-specific Property Manager → owner. Our action-class taxonomy mirrors exactly this structure
+- **Tested knowledge** lives in PMs' heads (which elevator vendor fixed which building) → Every staff handoff has a `knowledge_capture` write-back step — *this is the strategic killer feature for Hallo Theo*
+- **Customer base spans 25 to 100 years old.** → Channel-adaptive dispatch (letter for the 80-year-old, Telegram for the 25-year-old, same underlying answer)
+- **Phone-based identity** → Agent looks up tenant by caller ID on pickup
+- **WEG vs SEV** — two distinct business models in German property management; data model accommodates both
+
+See [`docs/CATEGORIES_AND_ACTIONS.md`](./docs/CATEGORIES_AND_ACTIONS.md) for the full triage taxonomy and standard action sequences, and [`docs/INQUIRIES_SAMPLES.md`](./docs/INQUIRIES_SAMPLES.md) for 50 realistic sample inquiries used as our training + eval set.
+
+---
+
 ## 🧠 How It Works
 
 1. **Tenant initiates contact** via the hallo theo landing page (green-button web call — per [Wynand's guidance](./docs/WYNAND_FEEDBACK.md), no real telephone number is needed for the demo).
 2. **ElevenLabs Conversational AI agent** picks up and has a natural conversation in the tenant's language.
 3. The agent **transcribes** every word in real time and posts the final transcript to a **Supabase** webhook at end-of-call.
-4. An **AI classification layer** (Claude) decides urgency: `LOW` / `MEDIUM` / `HIGH`.
-5. The system **dispatches** the correct response:
-   - 🟢 **LOW** → SMS/email with DIY guide (article + YouTube link)
-   - 🟡 **MEDIUM** → Forward to human staff with full context summary
-   - 🔴 **HIGH** → **Theo Negotiates** kicks in — simulated parallel auction with 3 Handwerker, owner-consented Stripe deposit, tenant confirmation ([full spec](./docs/THEO_NEGOTIATES.md))
-6. **Everything is logged in Supabase** — full transcript, classification, dispatch action, auction bids, payouts — indexed by tenant ID / contract number.
+4. The **AI triage layer** (Claude) classifies the inquiry on **two axes**: urgency (`LOW` / `MEDIUM` / `HIGH` / `EMERGENCY`) and action class (`AUTO_RESOLVE` / `SERVICER_QUEUE` / `PROPERTY_MANAGER` / `OWNER_APPROVAL` / `EMERGENCY_DISPATCH`). Plus a `knowledge_capture_required` modifier flag — see [CATEGORIES_AND_ACTIONS.md](./docs/CATEGORIES_AND_ACTIONS.md).
+5. The system **dispatches** via the matching Standard Action Sequence (SAS):
+   - 🤖 **AUTO_RESOLVE** → DIY guide via the tenant's preferred channel (letter, email, SMS, WhatsApp, Telegram, in-app — adapted to age + tech profile)
+   - 👤 **SERVICER_QUEUE** → ticket to generalist staff (HubSpot-compatible)
+   - 🏠 **PROPERTY_MANAGER** → routed to the named PM for that property, with full context + AI-summarized brief
+   - 💰 **OWNER_APPROVAL** → owner gets a one-tap consent link (above-budget repairs, structural decisions)
+   - 🚨 **EMERGENCY_DISPATCH** → parallel notification to vendor + PM + owner; safety advisory to tenant if applicable
+   - 📚 **`KNOWLEDGE_CAPTURE_REQUIRED`** modifier → after staff resolves, NeoTheo prompts them to write back what they did to the property's knowledge graph (operationalizing Hallo Theo's "tested knowledge" strategic priority)
+6. **Everything is logged in Supabase** — full transcript, classification, dispatch action, knowledge captures — indexed by tenant ID / contract number / property ID. The Phase-2 [`Theo Negotiates`](./docs/THEO_NEGOTIATES.md) auction subsystem extends `OWNER_APPROVAL` with multi-vendor voice auctions + two-sided Stripe marketplace.
 
 ---
 
@@ -106,9 +125,13 @@ neotheo/
 │   └── knowledge-base/   # DIY guides (markdown) for low-urgency answers
 ├── docs/
 │   ├── ARCHITECTURE.md
+│   ├── CATEGORIES_AND_ACTIONS.md  # urgency × action-class taxonomy + SAS sequences
+│   ├── INQUIRIES_SAMPLES.md       # 50 sample inquiries spanning all customer profiles
+│   ├── BUILD_PLAN.md              # team split + critical path
+│   ├── JAN_FEEDBACK.md            # ★ customer (Hallo Theo) feedback session
+│   ├── WYNAND_FEEDBACK.md         # technical mentor scope decisions (Twilio out, Supabase in)
 │   ├── URGENCY_RULES.md
-│   ├── THEO_NEGOTIATES.md   # ★ HIGH-urgency multi-agent vendor auction
-│   ├── WYNAND_FEEDBACK.md   # technical mentor scope decisions (Twilio out, Supabase in)
+│   ├── THEO_NEGOTIATES.md         # ★ HIGH-urgency multi-agent vendor auction (Phase 2 framing)
 │   └── ELEVENLABS_SETUP.md
 └── infra/                # Local dev configs
 ```
