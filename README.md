@@ -147,6 +147,24 @@ cd apps/dashboard && pnpm dev
 
 ---
 
+## 👥 Team
+
+Built at the HalloTheo Hackathon in Berlin, 2026, by a two-person team combining property-tech operations, product, and engineering.
+
+### Ian Baumeister — Product, Strategy & Full-Stack Build
+[GitHub `@ibxibx`](https://github.com/ibxibx) · [LinkedIn](https://www.linkedin.com/in/avoian/) · Berlin, DE
+
+Founder and CEO of [AVO Group](https://avotravel.com) (since 2013), Head of Design & Marketing at [DIAMONDSITE.DE](https://diamondsite.de). Background spans real estate, travel-tech, and marketing operations, with a long track record of building startups at the intersection of physical space and digital product. Recent technical work includes the **Jasmin Catering AI Agent** (collaborative AI agent project) and a React Native chat app ([`ibxibx/nextchat`](https://github.com/ibxibx/nextchat)). For NeoTheo: product vision, system architecture, API + dashboard implementation, hackathon pitch.
+
+### Soheil Fathalian — Technical Co-Lead & Concept Architect
+[GitHub `@soheilfathalian`](https://github.com/soheilfathalian) · [LinkedIn](https://www.linkedin.com/in/soheil-fathalian-2000/) · Berlin, DE
+
+Technical Entrepreneur in Residence at **[yoursquares GmbH](https://yoursquares.de)** (PropTech, Berlin), where he works on early-stage technical product development at the intersection of real estate and emerging technology. For NeoTheo: concept architecture, multi-agent design exploration, vendor-side integration logic (Stripe Connect dispatch, Handwerker negotiation flows), and the longer-term "Property Soul" / synthetic-Verwalter framing that informs the 5-year vision.
+
+> The team's complementary backgrounds — Ian's real-estate-meets-product founding experience and Soheil's PropTech-native technical entrepreneurship — are why NeoTheo is built on a deep, lived understanding of the actual problem space, not a generic "AI for X" pitch.
+
+---
+
 ## 📜 License
 
 MIT — built at the HalloTheo Hackathon, 2026.
