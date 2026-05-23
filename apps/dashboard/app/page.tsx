@@ -46,6 +46,9 @@ export default function Home() {
             tech_affinity: data.tech_affinity,
             preferred_channel: data.preferred_channel,
           });
+          // Mark identified — the dashboard now has the tenant context
+          // even before the agent's tool roundtrip confirms it on its side.
+          setTenantIdentified(true);
         }
       } catch (e) {
         console.error("Failed to fetch demo tenant", e);
@@ -80,6 +83,10 @@ export default function Home() {
   } = useElevenLabsCall({
     agentId: AGENT_ID,
     callerPhone: DEMO_PHONE,
+    callerName: tenant?.name,
+    callerBuilding: tenant?.building,
+    callerUnit: tenant?.unit,
+    callerLanguage: tenant?.language,
     onToolCall: (name) => {
       if (name === "lookup_tenant_by_phone") setTenantIdentified(true);
     },
@@ -171,7 +178,7 @@ export default function Home() {
         {/* RIGHT: Dashboard */}
         <div className="flex-1 grid grid-cols-12 gap-6 min-w-0">
           <div className="col-span-3 min-w-0">
-            <TenantCard tenant={tenant} identified={tenantIdentified} />
+            <TenantCard tenant={tenant} identified={tenantIdentified} active={tenantIdentified && isLive} />
           </div>
           <div className="col-span-5 min-w-0">
             <ConversationStream messages={messages} isLive={isLive} />

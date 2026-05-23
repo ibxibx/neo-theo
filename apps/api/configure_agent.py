@@ -1,5 +1,5 @@
 """
-One-shot script: configure the NeoTheo intake agent in ElevenLabs.
+One-shot script: configure the neo-theo intake agent in ElevenLabs.
 
 Steps:
 1. Create the 5 custom tools (lookup_tenant_by_phone, get_building_emergency_info,
@@ -51,7 +51,12 @@ TOOLS = [
                     "properties": {
                         "phone": {
                             "type": "string",
-                            "description": "The caller's phone number in E.164 format, e.g. +493012340001"
+                            "description": (
+                                "The caller's phone number in E.164 format. "
+                                "ALWAYS pass the exact literal value: {{caller_phone}} "
+                                "— this is the dynamic variable the platform substitutes "
+                                "at runtime with the real caller's number, e.g. +493012340024."
+                            )
                         }
                     },
                     "required": ["phone"]
@@ -153,18 +158,43 @@ def list_existing_tools():
 def create_tool(tool_def):
     r = httpx.post(f"{BASE}/tools", headers=HEADERS, json=tool_def, timeout=15)
     if not r.is_success:
-        print(f"  ✗ create failed: {r.status_code} {r.text[:300]}")
+        print(f"  [x] create failed: {r.status_code} {r.text[:300]}")
         r.raise_for_status()
     return r.json()
 
 
 def delete_tool(tool_id):
+    # Try normal delete first
     r = httpx.delete(f"{BASE}/tools/{tool_id}", headers=HEADERS, timeout=10)
-    if not r.is_success and r.status_code != 404:
-        print(f"  ! delete failed: {r.status_code} {r.text[:200]}")
+    if r.status_code == 409:
+        # Tool is still attached to an agent. Force-delete.
+        r2 = httpx.delete(
+            f"{BASE}/tools/{tool_id}",
+            headers=HEADERS,
+            params={"force": "true"},
+            timeout=10,
+        )
+        if not r2.is_success:
+            print(f"  [!] force delete failed: {r2.status_code} {r2.text[:200]}")
+    elif not r.is_success and r.status_code != 404:
+        print(f"  [!] delete failed: {r.status_code} {r.text[:200]}")
+
+
+def detach_all_tools_from_agent():
+    """Empty the agent's tool_ids so existing tools become deletable."""
+    payload = {
+        "conversation_config": {
+            "agent": {"prompt": {"tool_ids": []}}
+        }
+    }
+    r = httpx.patch(f"{BASE}/agents/{AGENT_ID}", headers=HEADERS, json=payload, timeout=10)
+    if not r.is_success:
+        print(f"  [!] detach failed: {r.status_code} {r.text[:200]}")
 
 
 print("Step 1: Reconciling tools...")
+print("  detaching all tools from agent first (so deletes succeed)...")
+detach_all_tools_from_agent()
 existing = list_existing_tools()
 existing_by_name = {t.get("tool_config", {}).get("name", t.get("name")): t for t in existing}
 print(f"  existing tools: {len(existing)} ({list(existing_by_name.keys())})")
@@ -179,7 +209,7 @@ for tool_def in TOOLS:
     created = create_tool(tool_def)
     tid = created.get("id") or created.get("tool_id")
     new_tool_ids.append(tid)
-    print(f"  ✓ {name} → id={tid}")
+    print(f"  [ok] {name} -> id={tid}")
 
 print(f"\nCreated {len(new_tool_ids)} tools.")
 
@@ -193,7 +223,12 @@ print("\nStep 2: Updating agent...")
 update_payload = {
     "conversation_config": {
         "agent": {
-            "first_message": "hallo, hier ist Theo von hallo theo. Wie kann ich Ihnen helfen?",
+            # Personalized greeting using dynamic variables passed from the dashboard.
+            # When caller is known (the common case in our demo), this resolves to e.g.
+            # "Guten Tag Daniel, hier ist Theo von hallo theo. Wie kann ich Ihnen helfen?"
+            # When unknown, {{caller_first_name}} resolves to empty and we get the
+            # generic "Guten Tag, hier ist Theo von hallo theo. Wie kann ich Ihnen helfen?".
+            "first_message": "Guten Tag {{caller_first_name}}, hier ist Theo von hallo theo. Wie kann ich Ihnen helfen?",
             "language": "de",
             "prompt": {
                 "prompt": SYSTEM_PROMPT,
@@ -206,10 +241,10 @@ update_payload = {
 
 r = httpx.patch(f"{BASE}/agents/{AGENT_ID}", headers=HEADERS, json=update_payload, timeout=15)
 if not r.is_success:
-    print(f"  ✗ update failed: {r.status_code} {r.text[:500]}")
+    print(f"  [x] update failed: {r.status_code} {r.text[:500]}")
     sys.exit(1)
 
-print(f"  ✓ Agent updated. version_id={r.json().get('version_id')}")
+print(f"  [ok] Agent updated. version_id={r.json().get('version_id')}")
 
 # ---------------------------------------------------------------------------
 # Step 3: Verify
@@ -225,4 +260,4 @@ print(f"  agent.first_message: {agent['conversation_config']['agent']['first_mes
 print(f"  agent.language: {agent['conversation_config']['agent']['language']}")
 print(f"  attached tools: {len(attached)} ({attached})")
 print(f"  prompt length: {len(prompt_obj.get('prompt', ''))} chars")
-print(f"\n✅ Agent ready: https://elevenlabs.io/app/talk-to?agent_id={AGENT_ID}")
+print(f"\n[DONE] Agent ready: https://elevenlabs.io/app/talk-to?agent_id={AGENT_ID}")

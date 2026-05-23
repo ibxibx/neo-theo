@@ -10,6 +10,11 @@ type UseElevenLabsCallProps = {
   agentId: string;
   /** Phone number to pass as a dynamic var so lookup_tenant_by_phone works */
   callerPhone: string;
+  /** Optional tenant context — passed as dynamic variables for a personalized greeting */
+  callerName?: string;
+  callerBuilding?: string;
+  callerUnit?: string;
+  callerLanguage?: string;
   onToolCall?: (name: string) => void;
 };
 
@@ -22,6 +27,10 @@ type UseElevenLabsCallProps = {
 export function useElevenLabsCall({
   agentId,
   callerPhone,
+  callerName,
+  callerBuilding,
+  callerUnit,
+  callerLanguage,
   onToolCall,
 }: UseElevenLabsCallProps) {
   const [callState, setCallState] = useState<CallState>("idle");
@@ -74,17 +83,27 @@ export function useElevenLabsCall({
     try {
       // Request mic permission up-front for a smoother UX
       await navigator.mediaDevices.getUserMedia({ audio: true });
+      // Pass everything the agent needs to greet personally on connect.
+      // `caller_first_name` lets the first_message say "Guten Tag, Daniel"
+      // without waiting for a tool roundtrip.
+      const firstName = callerName ? callerName.split(" ")[0] : "";
       await conv.startSession({
         agentId,
         dynamicVariables: {
           caller_phone: callerPhone,
+          caller_name: callerName ?? "",
+          caller_first_name: firstName,
+          caller_building: callerBuilding ?? "",
+          caller_unit: callerUnit ?? "",
+          caller_language: callerLanguage ?? "de",
+          caller_known: callerName ? "true" : "false",
         },
       });
     } catch (e) {
       console.error("Failed to start EL session", e);
       setCallState("ended");
     }
-  }, [agentId, callerPhone, conv]);
+  }, [agentId, callerPhone, callerName, callerBuilding, callerUnit, callerLanguage, conv]);
 
   const stop = useCallback(async () => {
     try {
