@@ -48,6 +48,46 @@ See [`docs/CATEGORIES_AND_ACTIONS.md`](./docs/CATEGORIES_AND_ACTIONS.md) for the
 
 ---
 
+## 📊 By the Numbers — What's Actually Built
+
+> Two days. Two co-builders. One in-person customer conversation with Jan @ Hallo Theo. Everything below is in the repo and verifiable — not roadmap talk.
+
+**Triage engine (live, in the demo)**
+
+- **4 urgency levels** — `LOW` / `MEDIUM` / `HIGH` / `EMERGENCY`, each with an explicit latency budget (24h → <15 min)
+- **5 action classes + 1 modifier** — `AUTO_RESOLVE`, `SERVICER_QUEUE`, `PROPERTY_MANAGER`, `OWNER_APPROVAL`, `EMERGENCY_DISPATCH`, plus the `KNOWLEDGE_CAPTURE_REQUIRED` modifier (the strategic feature Jan flagged as "the thing that will make us say yes")
+- **7 Standard Action Sequences** (SAS-1 through SAS-7) — deterministic, step-by-step workflows that fire once Claude classifies the call. Each SAS specifies exactly what the system does, in what order, and what SLA applies. See [`docs/CATEGORIES_AND_ACTIONS.md`](./docs/CATEGORIES_AND_ACTIONS.md).
+- **15 domain categories** — heating, plumbing, electrical, elevator, locks/keys, appliances, structural, pests, cleaning, noise, document requests, accounting, renovation, information lookup, administrative
+- **7 communication channels** — voice callback, letter PDF, email, SMS, WhatsApp Business, Telegram, in-app push — chosen per tenant by age + tech-affinity (Jan's insight #6)
+
+**Agent (ElevenLabs Conversational AI · German)**
+
+- **4 server tools** live in production: `lookup_tenant_by_phone`, `get_building_emergency_info`, `log_inquiry`, `trigger_emergency_dispatch` — all wired to the deployed Render API and called by Claude during the conversation
+- **Dynamic per-caller greeting** — agent calls `lookup_tenant_by_phone` on connect and opens with *"Guten Tag {first_name}, hier ist Theo von hallo theo"*, never *"please tell me your name"*
+- **5 supported languages** in the data model — German (default), English, Turkish, Polish, Arabic
+
+**Data model & backend**
+
+- **11 database tables** — `tenants`, `calls`, `inquiries`, `dispatches`, `kb_articles`, `handwerker`, `auctions`, `bids`, `owner_consents`, `payouts`, `vendor_charges` — covering the triage flow + the Phase-2 Theo-Negotiates auction subsystem + the two-sided Stripe marketplace
+- **686 lines of Python** in `apps/api` (FastAPI + Supabase + Anthropic + ElevenLabs SDKs)
+- **1,364 lines of TypeScript/TSX** in `apps/dashboard` — Next.js 14 + Tailwind + shadcn-style components, Supabase Realtime subscription, ElevenLabs web SDK
+
+**Training & eval material**
+
+- **50 hand-written sample inquiries** ([`docs/INQUIRIES_SAMPLES.md`](./docs/INQUIRIES_SAMPLES.md)) — span ages 25 to 100, WEG + SEV, all categories and all SAS branches, each with expected classification — usable as a training set, an eval harness, and a judge demo menu
+- **9 documentation files** (~110 KB of design) — architecture, build plan, two customer-feedback transcripts (Jan and Wynand), urgency rules, the categories taxonomy, the Theo Negotiates spec, and ElevenLabs setup
+- **1 fully-written knowledge-base article** (`plumbing_slow_drain.md`) demonstrating the `AUTO_RESOLVE` DIY format; the KB schema + retrieval flow is in place for the full corpus
+
+**Production deployment**
+
+- **Backend live** at `https://neo-theo-api.onrender.com` — `/health` returns `{status: ok, db: ok, claude: ok}`
+- **Auto-deploy** from GitHub → Render on every push to `main`
+- **Cold-start mitigation** — GitHub Actions cron pings `/health` every 10 minutes (`.github/workflows/keep-warm.yml`)
+- **CORS hardened** for production deploy (no wildcard + credentials combo)
+- **22 commits** across the two-day build, all on `main`
+
+---
+
 ## 🏛️ Architecture (High Level)
 
 ```
