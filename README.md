@@ -16,6 +16,22 @@
 
 ---
 
+## 📸 See It Live
+
+<div align="center">
+  <img src="./docs/assets/dashboard-overview.png" alt="neo-theo staff dashboard — full workspace view during a live emergency call" width="100%" />
+  <p><sub><b>Staff dashboard during a live call.</b> Tenant identified by phone on pickup · live German transcript streaming from ElevenLabs · Claude triage on the right classifies <code>EMERGENCY · electrical · 93% confidence</code> with full reasoning · dispatch panel auto-routes to a vetted vendor and surfaces the confirmation email to the tenant.</sub></p>
+</div>
+
+<br />
+
+<div align="center">
+  <img src="./docs/assets/triage-detail.png" alt="Triage column close-up — situation summary, urgency banner with SLA, routing, reasoning, metadata, knowledge-capture flag, dispatch and Stripe marketplace" width="42%" />
+  <p><sub><b>Triage &amp; dispatch column, full detail.</b> Six clearly-zoned sections — Situation · Classification (urgency banner + SLA + 4-step severity bar) · Next Action (routing + owner-approval flag + Claude's reasoning) · Details (category, confidence, cost bucket, tenant tone, detected language) · the strategic Knowledge-Capture flag Jan named as the killer feature · Dispatch with vendor card, appointment, confirmation email, and the two-sided Stripe marketplace transaction.</sub></p>
+</div>
+
+---
+
 ## 🎯 The Vision
 
 HalloTheo's mandate: build the **futuristic tech solution** — what will be efficient, useful, and actually working **5 years from now**.
