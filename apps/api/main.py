@@ -366,6 +366,71 @@ def list_inquiries(limit: int = 20, urgency: Optional[str] = None):
 
 
 # ---------------------------------------------------------------------------
+# 4. DIRECT TRIAGE (used by the dashboard when a call ends)
+# ---------------------------------------------------------------------------
+# This endpoint runs the same triage logic as the webhook, but returns the
+# result inline. The dashboard uses this instead of waiting for Supabase
+# Realtime so the demo is self-contained: no dependency on ElevenLabs
+# webhook delivery or Supabase Realtime configuration.
+
+class DirectTriageRequest(BaseModel):
+    transcript: str
+    tenant_id: Optional[str] = None
+    tenant_name: Optional[str] = None
+    tenant_contract_nr: Optional[str] = None
+    tenant_building: Optional[str] = None
+    tenant_unit: Optional[str] = None
+    tenant_email: Optional[str] = None
+    tenant_phone: Optional[str] = None
+    tenant_age_bucket: Optional[str] = None
+    tenant_tech_affinity: Optional[str] = None
+    tenant_preferred_channel: Optional[str] = None
+
+
+@app.post("/triage")
+async def triage_endpoint(req: DirectTriageRequest):
+    """
+    Direct triage endpoint for the dashboard.
+    Accepts a transcript + tenant context, returns the full TriageResult.
+    Also persists the inquiry row (best-effort; demo continues even if DB write fails).
+    """
+    tenant = {
+        "id": req.tenant_id,
+        "name": req.tenant_name,
+        "contract_nr": req.tenant_contract_nr,
+        "building": req.tenant_building,
+        "unit": req.tenant_unit,
+        "email": req.tenant_email,
+        "phone": req.tenant_phone,
+        "age_bucket": req.tenant_age_bucket,
+        "tech_affinity": req.tenant_tech_affinity,
+        "preferred_channel": req.tenant_preferred_channel,
+    } if req.tenant_id else None
+
+    try:
+        triage = await run_triage(req.transcript, tenant)
+    except HTTPException:
+        raise
+    except Exception as e:
+        log.error(f"triage endpoint failed: {e}")
+        raise HTTPException(500, f"triage_failed: {e}")
+
+    # Best-effort persist; don't block on it
+    inquiry_id = None
+    try:
+        if supabase:
+            inquiry_id = _store_inquiry(None, req.tenant_id, triage)
+    except Exception as e:
+        log.warning(f"triage endpoint: persist failed (non-fatal): {e}")
+
+    return {
+        "ok": True,
+        "inquiry_id": inquiry_id,
+        "triage": triage.dict(),
+    }
+
+
+# ---------------------------------------------------------------------------
 # Helpers
 # ---------------------------------------------------------------------------
 

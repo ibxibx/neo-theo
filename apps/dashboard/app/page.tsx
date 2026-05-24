@@ -93,19 +93,60 @@ export default function Home() {
     },
   });
 
-  // 4. When call ends, start classifying state
+  // 4. When call ends, POST transcript to /triage and render the result.
+  // This bypasses the webhook + Supabase Realtime path so the demo is
+  // self-contained (no dependency on EL webhook delivery or Realtime config).
   const isLive = callState === "connecting" || callState === "connected";
   useEffect(() => {
-    if (callState === "ended" && messages.length > 0 && !triage) {
-      setClassifying(true);
-      // The backend webhook will write the inquiry; we listen via realtime below.
-      // Fallback timeout: stop classifying after 30s.
-      const t = setTimeout(() => setClassifying(false), 30000);
-      return () => clearTimeout(t);
-    }
-  }, [callState, messages.length, triage]);
+    if (callState !== "ended" || messages.length === 0 || triage) return;
+    if (!tenant) return;
 
-  // 5. Supabase Realtime subscription on `inquiries` table
+    let cancelled = false;
+    setClassifying(true);
+
+    const transcript = messages
+      .filter((m) => m.role === "agent" || m.role === "user")
+      .map((m) => `${m.role === "agent" ? "Theo" : tenant.name}: ${m.text}`)
+      .join("\n");
+
+    (async () => {
+      try {
+        const res = await fetch(`${API_URL}/triage`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            transcript,
+            tenant_id: tenant.id,
+            tenant_name: tenant.name,
+            tenant_contract_nr: tenant.contract_nr,
+            tenant_building: tenant.building,
+            tenant_unit: tenant.unit,
+            tenant_email: tenant.email,
+            tenant_phone: tenant.phone,
+            tenant_age_bucket: tenant.age_bucket,
+            tenant_tech_affinity: tenant.tech_affinity,
+            tenant_preferred_channel: tenant.preferred_channel,
+          }),
+        });
+        if (!res.ok) throw new Error(`triage HTTP ${res.status}`);
+        const data = await res.json();
+        if (cancelled) return;
+        setTriage(data.triage as TriageResult);
+      } catch (e) {
+        console.error("triage failed:", e);
+      } finally {
+        if (!cancelled) setClassifying(false);
+      }
+    })();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [callState, messages, triage, tenant]);
+
+  // 5. Supabase Realtime subscription on `inquiries` table (secondary path,
+  // still useful if the webhook DOES fire — won't double-populate because we
+  // gate on `!triage`).
   useEffect(() => {
     const channel = supabase
       .channel("inquiries-realtime")
@@ -114,21 +155,22 @@ export default function Home() {
         { event: "INSERT", schema: "public", table: "inquiries" },
         (payload) => {
           const row = payload.new as Inquiry;
-          // Map the DB row back to a TriageResult shape for display.
-          // The backend writes a subset; we hydrate sensible defaults.
-          setTriage({
-            summary: row.summary,
-            category: row.category,
-            urgency: (row.urgency as TriageResult["urgency"]) ?? "MEDIUM",
-            action_class: inferActionClass(row),
-            knowledge_capture_required: false,
-            estimated_cost_eur_bucket: "unknown",
-            needs_owner_approval: false,
-            tenant_emotional_state: "calm",
-            language_detected: "de",
-            confidence: row.confidence ?? 0.85,
-            keywords: row.keywords ?? [],
-            reasoning: row.summary, // best we have until backend exposes full triage JSON
+          setTriage((prev) => {
+            if (prev) return prev; // already populated by /triage POST
+            return {
+              summary: row.summary,
+              category: row.category,
+              urgency: (row.urgency as TriageResult["urgency"]) ?? "MEDIUM",
+              action_class: inferActionClass(row),
+              knowledge_capture_required: false,
+              estimated_cost_eur_bucket: "unknown",
+              needs_owner_approval: false,
+              tenant_emotional_state: "calm",
+              language_detected: "de",
+              confidence: row.confidence ?? 0.85,
+              keywords: row.keywords ?? [],
+              reasoning: row.summary,
+            };
           });
           setClassifying(false);
         }
