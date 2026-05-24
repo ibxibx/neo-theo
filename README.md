@@ -115,51 +115,148 @@ See [`docs/CATEGORIES_AND_ACTIONS.md`](./docs/CATEGORIES_AND_ACTIONS.md) for the
 
 ---
 
-## 🏛️ Architecture (High Level)
+## 🏛️ Architecture
 
+The diagram below shows every subsystem actually deployed today, in the order data flows through them. All four urgency lanes are routed through the same triage layer; downstream actions, channels, and the Stripe marketplace are first-class subsystems with their own audit trails.
+
+### 1. Intake → Triage → Dispatch (the main flow)
+
+```mermaid
+flowchart TD
+    classDef tenant fill:#dbeafe,stroke:#1e6fe0,stroke-width:2px,color:#0f172a
+    classDef agent fill:#ede9fe,stroke:#7c3aed,stroke-width:2px,color:#0f172a
+    classDef brain fill:#fef3c7,stroke:#d97757,stroke-width:2px,color:#0f172a
+    classDef data fill:#dcfce7,stroke:#3dde07a,stroke-width:2px,color:#0f172a
+    classDef low fill:#dcfce7,stroke:#16a34a,color:#0f172a
+    classDef medium fill:#fef3c7,stroke:#d97757,color:#0f172a
+    classDef high fill:#fee2e2,stroke:#dc2626,color:#0f172a
+    classDef emergency fill:#fecaca,stroke:#991b1b,stroke-width:3px,color:#0f172a
+    classDef channel fill:#f1f5f9,stroke:#475569,color:#0f172a
+    classDef capture fill:#e0e7ff,stroke:#5856d6,stroke-width:2px,color:#0f172a
+
+    %% INTAKE
+    T["👥 Tenant<br/>(green button on landing page)"]:::tenant
+
+    %% AGENT LAYER
+    EL["🎙️ ElevenLabs Conversational AI<br/>Theo · German · web SDK"]:::agent
+    T1["lookup_tenant_by_phone"]:::agent
+    T2["get_building_emergency_info"]:::agent
+    T3["log_inquiry"]:::agent
+    T4["trigger_emergency_dispatch"]:::agent
+
+    %% TRIAGE
+    CL["🧠 Claude Sonnet 4.6<br/>Triage classifier<br/>+ reasoning"]:::brain
+
+    %% DATA
+    SB[("🗄️ Supabase Postgres<br/>11 tables · Realtime · RLS · pgvector<br/>tenants, calls, inquiries, dispatches,<br/>kb_articles, handwerker, auctions, bids,<br/>owner_consents, payouts, vendor_charges")]:::data
+    KB[("📚 Knowledge Base<br/>pgvector embeddings")]:::data
+
+    %% ROUTING LANES — ALL FOUR
+    LOW["🟢 <b>LOW</b><br/>AUTO_RESOLVE<br/>SLA ≤ 24h"]:::low
+    MED["🟠 <b>MEDIUM</b><br/>SERVICER_QUEUE / PROPERTY_MANAGER<br/>SLA ≤ 8h"]:::medium
+    HIGH["🔴 <b>HIGH</b><br/>OWNER_APPROVAL / EMERGENCY_DISPATCH<br/>SLA ≤ 1h → Theo Negotiates"]:::high
+    EMG["🚨 <b>EMERGENCY</b><br/>EMERGENCY_DISPATCH<br/>SLA &lt; 15 min<br/>Vendor + PM + Owner notified in parallel"]:::emergency
+
+    %% DISPATCH SURFACES — 7 channels chosen per tenant by age + tech
+    CH["📬 Channel-adaptive dispatch<br/>letter · email · SMS · WhatsApp<br/>Telegram · in-app · voice"]:::channel
+
+    %% KNOWLEDGE CAPTURE LOOP
+    CAP["📝 Knowledge-Capture write-back<br/>Tested knowledge → KB<br/>(the Jan / Hallo Theo killer feature)"]:::capture
+
+    %% DASHBOARD
+    DASH["🖥️ Staff Dashboard<br/>Next.js 14 · live transcript · triage<br/>dispatch · Stripe marketplace"]:::agent
+
+    %% EDGES
+    T -->|"web call"| EL
+    EL -.->|"on pickup"| T1
+    EL -.->|"on emergency"| T2
+    EL -.->|"end of call"| T3
+    EL -.->|"safety override"| T4
+    T1 <--> SB
+    T2 <--> SB
+    T3 --> SB
+    T4 --> SB
+
+    EL ==>|"transcript on call-end"| CL
+    CL ==>|"writes classified inquiry"| SB
+    CL ==>|"vector lookup for AUTO_RESOLVE"| KB
+
+    CL --> LOW
+    CL --> MED
+    CL --> HIGH
+    CL --> EMG
+
+    LOW --> CH
+    MED --> CH
+    HIGH --> CH
+    EMG --> CH
+
+    CH -->|"after resolution"| CAP
+    CAP --> KB
+
+    SB ==>|"Supabase Realtime"| DASH
 ```
-   ┌─────────────┐        ┌────────────────────┐        ┌──────────────────┐
-   │   Tenant    │─green ▶│ ElevenLabs Agent   │───────▶│  neo-theo API    │
-   │ (web call)  │ button │ (voice + STT/TTS)  │ webhook│  (FastAPI/Node)  │
-   └─────────────┘        └────────────────────┘        └────────┬─────────┘
-                                                                  │
-                          ┌───────────────────────────────────────┤
-                          ▼                                       ▼
-                ┌──────────────────┐                  ┌────────────────────┐
-                │ AI Triage Layer  │                  │   Supabase         │
-                │ (Claude)         │                  │ (Postgres+Realtime)│
-                │ - classify       │                  │ - tenants          │
-                │ - extract intent │                  │ - calls/transcripts│
-                │ - match KB       │                  │ - dispatch log     │
-                │                  │                  │ - auctions, bids   │
-                │                  │                  │ - payouts/charges  │
-                └────────┬─────────┘                  └────────────────────┘
-                         │
-        ┌────────────────┼────────────────┐
-        ▼                ▼                ▼
-   ┌─────────┐      ┌─────────┐      ┌──────────────────────┐
-   │ LOW     │      │ MEDIUM  │      │ HIGH                 │
-   │ DIY     │      │ Human   │      │ ▶ Theo Negotiates    │
-   │ guide   │      │ staff   │      │   simulated auction  │
-   │ (SMS)   │      │ queue   │      │   3× EL agent panels │
-   │         │      │         │      │   → bids → owner OK  │
-   │         │      │         │      │   → 2× Stripe events │
-   └─────────┘      └─────────┘      └──────────┬───────────┘
-                                                │
-                                     ┌──────────┴───────────┐
-                                     │ Vendor wins → tenant │
-                                     │ gets confirmation    │
-                                     │ (web agent voice)    │
-                                     └──────────────────────┘
 
-                ┌──────────────────┐
-                │  Staff Dashboard │  ← real-time view (Supabase Realtime)
-                │  (Next.js)       │     of calls, transcripts, dispatches,
-                │                  │     auctions, bids, payouts, charges
-                └──────────────────┘
+### 2. Theo Negotiates — HIGH-urgency auction + two-sided Stripe marketplace
+
+When triage emits `HIGH` or `EMERGENCY` with `needs_owner_approval`, neo-theo invokes the auction subsystem. This is a separate flow because it spawns multiple parallel agent sessions and triggers two Stripe operations in one tap.
+
+```mermaid
+flowchart LR
+    classDef orchestrator fill:#fef3c7,stroke:#d97757,stroke-width:2px,color:#0f172a
+    classDef agent fill:#ede9fe,stroke:#7c3aed,stroke-width:2px,color:#0f172a
+    classDef owner fill:#dbeafe,stroke:#1e6fe0,stroke-width:2px,color:#0f172a
+    classDef stripe fill:#e0e7ff,stroke:#5856d6,stroke-width:2px,color:#0f172a
+    classDef data fill:#dcfce7,stroke:#16a34a,stroke-width:2px,color:#0f172a
+
+    ORC["🧠 Claude<br/>Orchestrator<br/>brief + scoring"]:::orchestrator
+    A1["🎙️ Agent 1<br/>Müller<br/>Klempnerei"]:::agent
+    A2["🎙️ Agent 2<br/>Schmidt<br/>Sanitär"]:::agent
+    A3["🎙️ Agent 3<br/>Berliner<br/>Heizung"]:::agent
+    WIN["🏆 Winning bid<br/>price × ETA × reputation"]:::orchestrator
+    OW["👤 Owner<br/>one-tap consent push"]:::owner
+    SA["💰 Stripe A<br/>Vendor → neo-theo<br/>10% lead fee<br/>off-session Customer"]:::stripe
+    SB2["🔐 Stripe B<br/>Owner → Vendor<br/>30% deposit hold<br/>Stripe Connect destination charge"]:::stripe
+    SBD[("🗄️ Supabase<br/>auctions, bids,<br/>payouts, vendor_charges,<br/>owner_consents")]:::data
+    TENANT["📱 Tenant<br/>confirmation message"]:::owner
+
+    ORC ==>|"picks 3 vendors,<br/>writes brief"| A1
+    ORC ==> A2
+    ORC ==> A3
+    A1 -.->|"submit_bid"| WIN
+    A2 -.->|"submit_bid"| WIN
+    A3 -.->|"submit_bid"| WIN
+    WIN -->|"resolver picks 1"| OW
+    OW -->|"approved"| SA
+    OW -->|"approved"| SB2
+    SA --> SBD
+    SB2 --> SBD
+    OW --> TENANT
 ```
 
----
+### 3. Operational layer
+
+```mermaid
+flowchart LR
+    classDef ops fill:#f1f5f9,stroke:#475569,color:#0f172a
+    classDef cloud fill:#dbeafe,stroke:#1e6fe0,color:#0f172a
+
+    GH["📦 GitHub<br/>main branch"]:::ops
+    RN["☁️ Render<br/>FastAPI auto-deploy<br/>neo-theo-api.onrender.com"]:::cloud
+    KW["⏱️ GitHub Actions cron<br/>keep-warm · every 10 min<br/>pings /health"]:::ops
+    AUTH["🔐 Supabase Auth + RLS<br/>staff login · per-tenant scoping"]:::cloud
+    SUP[("🗄️ Supabase Cloud<br/>Postgres + Realtime")]:::cloud
+    VC["▲ Vercel<br/>Next.js dashboard<br/>(roadmap)"]:::cloud
+
+    GH -->|"push"| RN
+    KW -->|"every 10 min"| RN
+    AUTH --> SUP
+    RN <--> SUP
+    VC <-.-> RN
+    VC -.-> SUP
+```
+
+For the full schema and the auction subsystem details see [`docs/ARCHITECTURE.md`](./docs/ARCHITECTURE.md) and [`docs/THEO_NEGOTIATES.md`](./docs/THEO_NEGOTIATES.md).
 
 ## 🧰 Tech Stack
 
