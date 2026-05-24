@@ -39,7 +39,7 @@ export function DispatchPanel({ triage, tenant }: Props) {
   );
 }
 
-type Stage = "selecting" | "ringing" | "connected" | "negotiating" | "booked" | "email_sending" | "email_sent";
+type Stage = "selecting" | "ringing" | "connected" | "negotiating" | "booked" | "email_sending" | "email_sent" | "payment_processing" | "payment_settled";
 
 const STAGE_ORDER: Stage[] = [
   "selecting",
@@ -49,6 +49,8 @@ const STAGE_ORDER: Stage[] = [
   "booked",
   "email_sending",
   "email_sent",
+  "payment_processing",
+  "payment_settled",
 ];
 
 const STAGE_DURATIONS: Record<Stage, number> = {
@@ -58,7 +60,9 @@ const STAGE_DURATIONS: Record<Stage, number> = {
   negotiating: 1500,
   booked: 1300,
   email_sending: 1100,
-  email_sent: 0,
+  email_sent: 1400,
+  payment_processing: 1600,
+  payment_settled: 0,
 };
 
 function DispatchSequence({
@@ -92,6 +96,12 @@ function DispatchSequence({
   const reached = (s: Stage) => STAGE_ORDER.indexOf(s) <= stageIdx;
   const isLive = stage === "ringing" || stage === "connected" || stage === "negotiating";
 
+  // Stripe figures derived from the booked price
+  const leadFeePct = 0.10;
+  const depositPct = 0.30;
+  const leadFee = Math.round(price.amount * leadFeePct);
+  const deposit = Math.round(price.amount * depositPct);
+
   return (
     <div className={`card p-6 h-full overflow-y-auto scroll-soft ${isLive ? "card-active-green" : ""}`}>
       <div className="flex items-baseline justify-between">
@@ -100,10 +110,16 @@ function DispatchSequence({
             Dispatch
           </div>
           <div className="mt-1 text-[18px] font-semibold tracking-tight text-ink">
-            {stage === "email_sent" ? "Termin bestätigt" : "Handwerker wird beauftragt…"}
+            {stage === "payment_settled"
+              ? "Auftrag abgeschlossen · Zahlung verbucht"
+              : reached("payment_processing")
+              ? "Zahlung wird abgewickelt…"
+              : stage === "email_sent"
+              ? "Termin bestätigt"
+              : "Handwerker wird beauftragt…"}
           </div>
         </div>
-        {stage === "email_sent" && (
+        {stage === "payment_settled" && (
           <span className="status-pill bg-accent-green/10 text-accent-green">Abgeschlossen</span>
         )}
       </div>
@@ -210,19 +226,117 @@ function DispatchSequence({
           </div>
         </div>
       )}
+
+      {/* Stripe two-sided marketplace card — fires after the appointment is booked.
+          Shows BOTH sides of the transaction (vendor lead fee + owner deposit) as
+          README's "two-sided marketplace, one win" promise demands. */}
+      {reached("payment_processing") && (
+        <div className="mt-4 reveal">
+          <div className="flex items-center justify-between mb-2">
+            <div className="text-[10px] font-semibold tracking-[0.14em] uppercase text-ink-subtle">
+              Stripe · Two-Sided Marketplace
+            </div>
+            <span
+              className={`text-[10px] font-semibold uppercase tracking-wider ${
+                stage === "payment_settled" ? "text-accent-green" : "text-ink-soft"
+              }`}
+            >
+              {stage === "payment_settled" ? "✓ 2/2 Verbucht" : "Wird verarbeitet…"}
+            </span>
+          </div>
+
+          <div className="rounded-2xl bg-white ring-1 ring-black/[0.06] overflow-hidden">
+            {/* Side A: Vendor → neo-theo (lead fee) */}
+            <div className="px-4 py-3 border-b border-black/[0.05]">
+              <div className="flex items-start gap-3">
+                <div className="w-7 h-7 rounded-full bg-accent-indigo/12 flex items-center justify-center flex-shrink-0 mt-0.5">
+                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none">
+                    <path d="M5 12l5 5L20 7" stroke="#5856d6" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" />
+                  </svg>
+                </div>
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-baseline justify-between gap-2">
+                    <div className="text-[12px] font-semibold text-ink">
+                      Lead-Gebühr · {vendor.name.split(" ")[0]} → neo-theo
+                    </div>
+                    <div className="text-[13px] font-semibold text-ink font-mono whitespace-nowrap">
+                      € {leadFee}
+                    </div>
+                  </div>
+                  <div className="text-[11px] text-ink-soft mt-0.5">
+                    {Math.round(leadFeePct * 100)}% von € {price.amount} · off-session via Stripe Customer
+                  </div>
+                  <div className="flex items-center gap-1.5 mt-1.5">
+                    <span className={`text-[9px] uppercase tracking-wider font-semibold ${stage === "payment_settled" ? "text-accent-green" : "text-accent-orange"}`}>
+                      {stage === "payment_settled" ? "● succeeded" : "● processing"}
+                    </span>
+                    <span className="text-[10px] text-ink-subtle font-mono">pi_3PqM7r4581…</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Side B: Owner → Vendor (deposit hold via Stripe Connect) */}
+            <div className="px-4 py-3">
+              <div className="flex items-start gap-3">
+                <div className="w-7 h-7 rounded-full bg-accent-indigo/12 flex items-center justify-center flex-shrink-0 mt-0.5">
+                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none">
+                    <path d="M5 12l5 5L20 7" stroke="#5856d6" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" />
+                  </svg>
+                </div>
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-baseline justify-between gap-2">
+                    <div className="text-[12px] font-semibold text-ink">
+                      Anzahlung · Eigentümer → {vendor.name.split(" ")[0]}
+                    </div>
+                    <div className="text-[13px] font-semibold text-ink font-mono whitespace-nowrap">
+                      € {deposit}
+                    </div>
+                  </div>
+                  <div className="text-[11px] text-ink-soft mt-0.5">
+                    {Math.round(depositPct * 100)}% Hold · Stripe Connect destination charge · Freigabe nach Abschluss
+                  </div>
+                  <div className="flex items-center gap-1.5 mt-1.5">
+                    <span className={`text-[9px] uppercase tracking-wider font-semibold ${stage === "payment_settled" ? "text-accent-green" : "text-accent-orange"}`}>
+                      {stage === "payment_settled" ? "● hold placed" : "● authorizing"}
+                    </span>
+                    <span className="text-[10px] text-ink-subtle font-mono">pi_3PqM7r4582…</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Footer summary */}
+            <div className="px-4 py-2.5 bg-paper-rail/40 border-t border-black/[0.04] flex items-center justify-between">
+              <div className="text-[10px] uppercase tracking-[0.12em] text-ink-subtle font-semibold">
+                Auftragswert
+              </div>
+              <div className="text-[12px] text-ink font-mono">
+                € {price.amount} <span className="text-ink-subtle">(Spanne {price.pretty})</span>
+              </div>
+            </div>
+          </div>
+
+          <div className="mt-2 text-[10px] text-ink-subtle leading-snug">
+            Beide Stripe-Events werden parallel ausgelöst · revenue für neo-theo + Schutz für den Eigentümer · auditierbar in Supabase
+          </div>
+        </div>
+      )}
     </div>
   );
 }
 
 function callStateLabel(stage: Stage): string {
   switch (stage) {
-    case "selecting":     return "Passenden Handwerker auswählen…";
-    case "ringing":       return "Anruf läuft…";
-    case "connected":     return "Verbunden";
-    case "negotiating":   return "Preis & Termin verhandeln…";
-    case "booked":        return "Termin bestätigt";
-    case "email_sending": return "Bestätigung wird versendet…";
-    case "email_sent":    return "Mieter informiert";
+    case "selecting":           return "Passenden Handwerker auswählen…";
+    case "ringing":             return "Anruf läuft…";
+    case "connected":           return "Verbunden";
+    case "negotiating":         return "Preis & Termin verhandeln…";
+    case "booked":              return "Termin bestätigt";
+    case "email_sending":       return "Bestätigung wird versendet…";
+    case "email_sent":          return "Mieter informiert";
+    case "payment_processing":  return "Stripe · zwei Zahlungen werden ausgelöst…";
+    case "payment_settled":     return "Marketplace-Transaktion abgeschlossen";
   }
 }
 
@@ -233,13 +347,15 @@ function callStateDetail(
   appt: { dateLabel: string; timeLabel: string }
 ): string {
   switch (stage) {
-    case "selecting":     return "Vergleich mit 3 Anbietern nach Kategorie + Bewertung + ETA";
-    case "ringing":       return vendor.phone;
-    case "connected":     return `${vendor.name} hat geantwortet`;
-    case "negotiating":   return "Brief: Tropfender Wasserhahn · Verfügbarkeit + Preis abfragen";
-    case "booked":        return `${appt.dateLabel}, ${appt.timeLabel} · ${price.pretty}`;
-    case "email_sending": return "An den Mieter via bevorzugtem Kanal";
-    case "email_sent":    return "Workflow abgeschlossen · Audit-Log in Supabase";
+    case "selecting":           return "Vergleich mit 3 Anbietern nach Kategorie + Bewertung + ETA";
+    case "ringing":             return vendor.phone;
+    case "connected":           return `${vendor.name} hat geantwortet`;
+    case "negotiating":         return "Brief: Tropfender Wasserhahn · Verfügbarkeit + Preis abfragen";
+    case "booked":              return `${appt.dateLabel}, ${appt.timeLabel} · ${price.pretty}`;
+    case "email_sending":       return "An den Mieter via bevorzugtem Kanal";
+    case "email_sent":          return "Workflow abgeschlossen · Audit-Log in Supabase";
+    case "payment_processing":  return "Lead-Gebühr (Handwerker) + Anzahlungs-Hold (Eigentümer) parallel";
+    case "payment_settled":     return "Beide Stripe-Events succeeded · Auftragslebenszyklus geschlossen";
   }
 }
 

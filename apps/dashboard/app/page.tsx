@@ -193,7 +193,7 @@ export default function Home() {
     <div className="relative z-10 min-h-screen flex flex-col">
       <Header apiStatus={apiStatus} isCallLive={isLive} />
 
-      <main className="flex-1 flex gap-8 px-8 py-8 max-w-[1800px] mx-auto w-full">
+      <main className="flex-1 flex gap-8 px-8 py-8 max-w-[1920px] mx-auto w-full">
         {/* LEFT: Phone */}
         <div className="flex-shrink-0 flex flex-col items-center justify-center">
           {tenant ? (
@@ -218,15 +218,21 @@ export default function Home() {
           </button>
         </div>
 
-        {/* RIGHT: Dashboard */}
+        {/* RIGHT: Dashboard
+            Column distribution favors the right-most panel (triage + dispatch)
+            because that's where the information density lives: classification,
+            vendor selection, appointment, email preview, and the two-sided
+            Stripe marketplace flow. The conversation stream is dense visually
+            but trivially compressible; the triage/dispatch needs room to
+            breathe. */}
         <div className="flex-1 grid grid-cols-12 gap-6 min-w-0">
           <div className="col-span-3 min-w-0">
             <TenantCard tenant={tenant} identified={tenantIdentified} active={tenantIdentified && isLive} />
           </div>
-          <div className="col-span-5 min-w-0">
+          <div className="col-span-4 min-w-0">
             <ConversationStream messages={messages} isLive={isLive} />
           </div>
-          <div className="col-span-4 min-w-0 flex flex-col gap-6">
+          <div className="col-span-5 min-w-0 flex flex-col gap-6">
             <TriagePanel triage={triage} classifying={classifying} />
             {triage && <DispatchPanel triage={triage} tenant={tenant} />}
           </div>
