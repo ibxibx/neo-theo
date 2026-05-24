@@ -193,13 +193,14 @@ export default function Home() {
     <div className="relative z-10 min-h-screen flex flex-col">
       <Header apiStatus={apiStatus} isCallLive={isLive} />
 
-      <main className="flex-1 flex gap-8 px-8 py-8 max-w-[1920px] mx-auto w-full items-start">
+      <main className="flex-1 flex gap-8 px-8 pt-8 pb-12 max-w-[1920px] mx-auto w-full items-start">
         {/* LEFT: Phone
-            Top-aligned with the other columns. `sticky top-8` keeps the phone
+            Top-aligned with the other columns. `sticky top-24` keeps the phone
             visible as the right-side panels (triage + dispatch) grow tall and
-            the page scrolls — the phone stays anchored in the viewport so the
-            staff member never loses sight of the active call. */}
-        <div className="flex-shrink-0 flex flex-col items-center sticky top-8 self-start">
+            the page scrolls. The 96px offset clears the sticky navbar's glass
+            blur edge (header is ~80px) so the phone never appears clipped
+            behind the navbar at any scroll position. */}
+        <div className="flex-shrink-0 flex flex-col items-center sticky top-24 self-start">
           {tenant ? (
             <IPhoneFrame islandLabel={isLive ? "● Aktiver Anruf" : undefined}>
               <PhoneApp
