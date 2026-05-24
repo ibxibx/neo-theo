@@ -1,7 +1,18 @@
-# 🚀 **neo-theo**
+<div align="center">
+  <img src="./docs/assets/logo.png" alt="neo-theo" width="320" />
 
-> **The future of tenant–property communication.**
-> Built for the HalloTheo Hackathon · Track 1 · ElevenLabs Integration
+  # **neo-theo**
+
+  ### The future of tenant–property communication
+
+  *Built for the HalloTheo Hackathon · Track 1 · ElevenLabs Integration*
+
+  <br />
+
+  🟢 **Live API** &nbsp;·&nbsp; [`https://neo-theo-api.onrender.com`](https://neo-theo-api.onrender.com) &nbsp;·&nbsp; [`/health`](https://neo-theo-api.onrender.com/health)
+
+  ![api status](https://img.shields.io/badge/api-live-brightgreen) &nbsp; ![voice](https://img.shields.io/badge/voice-ElevenLabs-7c3aed) &nbsp; ![brain](https://img.shields.io/badge/triage-Claude%20Sonnet%204.6-d97757) &nbsp; ![stack](https://img.shields.io/badge/stack-Next.js%20%C2%B7%20FastAPI%20%C2%B7%20Supabase-1e6fe0)
+</div>
 
 ---
 

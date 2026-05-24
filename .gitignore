@@ -14,3 +14,7 @@ build/
 .dev.err.log
 *.tsbuildinfo
 .tmp_*
+
+# scratch
+_*.ps1
+pics/
