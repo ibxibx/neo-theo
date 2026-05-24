@@ -7,6 +7,7 @@ import { PhoneApp } from "./components/PhoneApp";
 import { TenantCard } from "./components/TenantCard";
 import { ConversationStream } from "./components/ConversationStream";
 import { TriagePanel } from "./components/TriagePanel";
+import { DispatchPanel } from "./components/DispatchPanel";
 import { useElevenLabsCall } from "./components/useElevenLabsCall";
 import { supabase } from "@/lib/supabase";
 import { Tenant, TriageResult, Inquiry } from "@/lib/types";
@@ -183,8 +184,9 @@ export default function Home() {
           <div className="col-span-5 min-w-0">
             <ConversationStream messages={messages} isLive={isLive} />
           </div>
-          <div className="col-span-4 min-w-0">
+          <div className="col-span-4 min-w-0 flex flex-col gap-6">
             <TriagePanel triage={triage} classifying={classifying} />
+            {triage && <DispatchPanel triage={triage} tenant={tenant} />}
           </div>
         </div>
       </main>
