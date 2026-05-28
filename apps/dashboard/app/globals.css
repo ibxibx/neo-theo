@@ -20,7 +20,11 @@
 
 html,
 body {
-  background: rgb(var(--background));
+  /* Background is rendered by fixed <div>s in layout.tsx (photo + 50% white
+     overlay). Body itself must be transparent so the photo shows through.
+     If the image ever fails, the layout's <html> still has the neutral tint
+     applied via the var below as a graceful fallback. */
+  background: transparent;
   color: rgb(var(--foreground));
   font-family:
     "SF Pro Display", "SF Pro Text", -apple-system, BlinkMacSystemFont,
@@ -31,6 +35,12 @@ body {
   letter-spacing: -0.011em;
 }
 
+html {
+  background-color: rgb(var(--background));
+}
+
+/* Subtle dot grid kept, but the colored radial washes are removed so the
+   background photo reads cleanly through the 50% white overlay. */
 body::before {
   content: "";
   position: fixed;
@@ -38,10 +48,9 @@ body::before {
   pointer-events: none;
   z-index: 0;
   background-image:
-    radial-gradient(rgba(0, 0, 0, 0.03) 1px, transparent 1px),
-    radial-gradient(circle at 80% 10%, rgba(88, 86, 214, 0.06) 0%, transparent 40%),
-    radial-gradient(circle at 20% 90%, rgba(0, 113, 227, 0.05) 0%, transparent 35%);
-  background-size: 24px 24px, 100% 100%, 100% 100%;
+    radial-gradient(rgba(0, 0, 0, 0.025) 1px, transparent 1px);
+  background-size: 24px 24px;
+  opacity: 0.6;
 }
 
 /* === iPhone frame === */
@@ -88,6 +97,27 @@ body::before {
   border-radius: 44px;
   overflow: hidden;
   background: #fbfbfd;
+}
+
+/* Responsive iPhone — uses transform: scale so internal absolute positioning
+   (dynamic island, status bar, home indicator) stays pixel-perfect. The
+   wrapper compensates for the scaled visual size with margin so flex layout
+   sees the correct footprint. Desktop (≥1280px) uses full 360×740. */
+.iphone-frame-wrap {
+  width: 360px;
+  height: 740px;
+}
+@media (max-width: 1279px) {
+  .iphone-frame { transform: scale(0.85); transform-origin: top center; }
+  .iphone-frame-wrap { width: 306px; height: 629px; }
+}
+@media (max-width: 767px) {
+  .iphone-frame { transform: scale(0.78); transform-origin: top center; }
+  .iphone-frame-wrap { width: 281px; height: 577px; }
+}
+@media (max-width: 380px) {
+  .iphone-frame { transform: scale(0.68); transform-origin: top center; }
+  .iphone-frame-wrap { width: 245px; height: 503px; }
 }
 
 .dynamic-island {

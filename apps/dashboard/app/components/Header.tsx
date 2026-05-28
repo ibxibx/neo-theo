@@ -26,25 +26,25 @@ export function Header({ apiStatus, isCallLive }: Props) {
   }, []);
 
   return (
-    <header className="flex items-center justify-between px-8 py-5 border-b border-black/[0.05] bg-white/45 backdrop-blur-xl backdrop-saturate-150 sticky top-0 z-30">
-      <div className="flex items-center gap-3">
+    <header className="flex items-center justify-between gap-3 px-4 sm:px-6 lg:px-8 py-4 sm:py-5 border-b border-black/[0.05] bg-white/45 backdrop-blur-xl backdrop-saturate-150 sticky top-0 z-30">
+      <div className="flex items-center gap-3 min-w-0">
         <Logo />
-        <div>
-          <div className="text-[18px] font-semibold tracking-tight text-ink leading-none">
+        <div className="min-w-0">
+          <div className="text-[16px] sm:text-[18px] font-semibold tracking-tight text-ink leading-none truncate">
             <strong className="font-bold">neo-theo</strong>
           </div>
-          <div className="text-[11px] text-ink-soft mt-1 tracking-wide">
+          <div className="text-[11px] text-ink-soft mt-1 tracking-wide truncate">
             Staff Dashboard · hallo theo
           </div>
         </div>
       </div>
 
-      <div className="flex items-center gap-3">
+      <div className="flex items-center gap-2 sm:gap-3 flex-shrink-0">
         <span className={`status-pill ${isCallLive ? "status-pill-live" : "status-pill-idle"}`}>
           {isCallLive ? "Anruf läuft" : "Bereit"}
         </span>
         <ApiStatusPill status={apiStatus} />
-        <span className="text-[13px] text-ink-soft font-mono tabular-nums">{time}</span>
+        <span className="hidden sm:inline text-[13px] text-ink-soft font-mono tabular-nums">{time}</span>
       </div>
     </header>
   );

@@ -193,25 +193,29 @@ export default function Home() {
     <div className="relative z-10 min-h-screen flex flex-col">
       <Header apiStatus={apiStatus} isCallLive={isLive} />
 
-      <main className="flex-1 flex gap-8 px-8 pt-8 pb-12 max-w-[1920px] mx-auto w-full items-start">
-        {/* LEFT: Phone
-            Top-aligned with the other columns. `sticky top-24` keeps the phone
-            visible as the right-side panels (triage + dispatch) grow tall and
-            the page scrolls. The 96px offset clears the sticky navbar's glass
-            blur edge (header is ~80px) so the phone never appears clipped
-            behind the navbar at any scroll position. */}
-        <div className="flex-shrink-0 flex flex-col items-center sticky top-24 self-start">
+      <main className="flex-1 flex flex-col lg:flex-row gap-6 lg:gap-8 px-4 sm:px-6 lg:px-8 pt-6 lg:pt-8 pb-12 max-w-[1920px] mx-auto w-full items-center lg:items-start">
+        {/* LEFT (≥lg): sticky phone column.  <lg: phone sits on top, centered.
+            Top-aligned with the other columns at lg+. `sticky top-24` keeps
+            the phone visible as the right-side panels (triage + dispatch)
+            grow tall and the page scrolls. The 96px offset clears the sticky
+            navbar's glass blur edge (header is ~80px) so the phone never
+            appears clipped behind the navbar at any scroll position.
+            On smaller widths we drop sticky so the phone scrolls with the
+            page — sticky on a stacked-on-top column would obscure content. */}
+        <div className="flex-shrink-0 flex flex-col items-center lg:sticky lg:top-24 lg:self-start">
           {tenant ? (
-            <IPhoneFrame islandLabel={isLive ? "● Aktiver Anruf" : undefined}>
-              <PhoneApp
-                tenant={tenant}
-                callState={callState}
-                onCallToggle={toggle}
-                callDurationSec={durationSec}
-              />
-            </IPhoneFrame>
+            <div className="iphone-frame-wrap relative">
+              <IPhoneFrame islandLabel={isLive ? "● Aktiver Anruf" : undefined}>
+                <PhoneApp
+                  tenant={tenant}
+                  callState={callState}
+                  onCallToggle={toggle}
+                  callDurationSec={durationSec}
+                />
+              </IPhoneFrame>
+            </div>
           ) : (
-            <div className="w-[360px] h-[740px] rounded-iphone bg-paper-rail flex items-center justify-center text-ink-soft text-sm">
+            <div className="iphone-frame-wrap rounded-iphone bg-paper-rail/70 backdrop-blur flex items-center justify-center text-ink-soft text-sm">
               Lade Mieter…
             </div>
           )}
@@ -223,21 +227,25 @@ export default function Home() {
           </button>
         </div>
 
-        {/* RIGHT: Dashboard
+        {/* RIGHT (≥lg): three-panel dashboard
             Column distribution favors the right-most panel (triage + dispatch)
             because that's where the information density lives: classification,
             vendor selection, appointment, email preview, and the two-sided
             Stripe marketplace flow. The conversation stream is dense visually
             but trivially compressible; the triage/dispatch needs room to
-            breathe. */}
-        <div className="flex-1 grid grid-cols-12 gap-6 min-w-0">
-          <div className="col-span-3 min-w-0">
+            breathe.
+            <md: single column stack
+            md–lg: 2-col (tenant alone on top row, conversation + triage side-by-side)
+            lg: 4-4-4 split
+            xl+: 3-4-5 split (final, content-density-optimised) */}
+        <div className="flex-1 grid grid-cols-1 md:grid-cols-12 gap-4 sm:gap-6 min-w-0 w-full">
+          <div className="md:col-span-12 lg:col-span-4 xl:col-span-3 min-w-0">
             <TenantCard tenant={tenant} identified={tenantIdentified} active={tenantIdentified && isLive} />
           </div>
-          <div className="col-span-4 min-w-0">
+          <div className="md:col-span-6 lg:col-span-4 min-w-0">
             <ConversationStream messages={messages} isLive={isLive} />
           </div>
-          <div className="col-span-5 min-w-0 flex flex-col gap-6">
+          <div className="md:col-span-6 lg:col-span-4 xl:col-span-5 min-w-0 flex flex-col gap-6">
             <TriagePanel triage={triage} classifying={classifying} />
             {triage && <DispatchPanel triage={triage} tenant={tenant} />}
           </div>
