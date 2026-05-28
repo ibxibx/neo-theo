@@ -55,16 +55,79 @@ const LANGUAGE_NAMES: Record<string, string> = {
 
 export function TriagePanel({ triage, classifying }: Props) {
   if (!triage && !classifying) {
+    // Empty state — staff are looking at this while the call is still in
+    // progress (or before it starts). Rather than a generic "waiting" card,
+    // we surface a preview of every section that will materialize in real
+    // time once Claude classifies the transcript. This sets expectations
+    // ("here is exactly what I'm about to see") and doubles as a feature
+    // walkthrough for first-time viewers / hackathon judges.
     return (
-      <div className="card p-6 h-full flex flex-col items-center justify-center text-center">
-        <div className="w-14 h-14 rounded-full bg-paper-rail mb-4 flex items-center justify-center">
-          <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
-            <path d="M9 12l2 2 4-4M12 22a10 10 0 100-20 10 10 0 000 20z" stroke="currentColor" strokeWidth="1.5" className="text-ink-subtle" />
-          </svg>
+      <div className="card p-6 h-full flex flex-col">
+        <div className="flex items-center gap-3">
+          <div className="w-10 h-10 rounded-full bg-paper-rail flex items-center justify-center flex-shrink-0">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
+              <path
+                d="M9 12l2 2 4-4M12 22a10 10 0 100-20 10 10 0 000 20z"
+                stroke="currentColor"
+                strokeWidth="1.5"
+                className="text-ink-subtle"
+              />
+            </svg>
+          </div>
+          <div className="min-w-0">
+            <div className="text-[15px] font-semibold text-ink leading-tight">
+              Triage wartet
+            </div>
+            <div className="text-[12px] text-ink-soft leading-snug mt-0.5">
+              Klassifizierung erscheint live, sobald der Anruf endet.
+            </div>
+          </div>
         </div>
-        <div className="text-[15px] font-medium text-ink">Triage wartet</div>
-        <div className="text-[13px] text-ink-soft mt-1 max-w-[240px]">
-          Klassifizierung erscheint, sobald der Anruf endet.
+
+        <div className="my-5 h-px bg-black/[0.06]" />
+
+        <div className="text-[10px] font-semibold tracking-[0.14em] uppercase text-ink-subtle mb-3">
+          Was hier gleich erscheint
+        </div>
+
+        <ul className="space-y-2.5 text-[12.5px] text-ink-soft leading-snug">
+          <PreviewItem
+            n={1}
+            title="Situation"
+            body="Ein-Satz-Zusammenfassung des Anliegens · Uhrzeit des Anrufendes."
+          />
+          <PreviewItem
+            n={2}
+            title="Dringlichkeit & SLA"
+            body="LOW · MEDIUM · HIGH · EMERGENCY mit Severity-Bar und Antwort­fenster (24 h → < 15 min)."
+          />
+          <PreviewItem
+            n={3}
+            title="Nächste Aktion & Routing"
+            body="Aktions­klasse (Auto-Lösung · Servicer-Queue · Verwalter · Eigentümer-Freigabe · Notfall-Dispatch) plus Claudes Begründung."
+          />
+          <PreviewItem
+            n={4}
+            title="Details"
+            body="Kategorie · Konfidenz · Kosten-Bucket · Tonfall des Mieters · erkannte Sprache."
+          />
+          <PreviewItem
+            n={5}
+            title="Wissens-Erfassung"
+            body="Strategischer Flag: falls aktiv, wird tested knowledge nach Lösung in die Objekt-Wissensbasis geschrieben."
+          />
+          <PreviewItem
+            n={6}
+            title="Stichwörter"
+            body="Extrahierte Entitäten für KB-Matching und spätere Suche."
+          />
+        </ul>
+
+        <div className="mt-5 pt-4 border-t border-black/[0.06] text-[11px] text-ink-subtle leading-snug">
+          Sobald der Mieter auflegt, postet das Dashboard das Transkript an{" "}
+          <span className="font-mono text-ink-soft">/triage</span> — Claude Sonnet 4.6
+          klassifiziert in ~2&nbsp;s, dann erscheint zusätzlich der Dispatch-Block
+          mit Handwerker, Termin und Bestätigungs-E-Mail.
         </div>
       </div>
     );
@@ -306,6 +369,32 @@ export function TriagePanel({ triage, classifying }: Props) {
 
 function Divider() {
   return <div className="my-5 h-px bg-black/[0.06]" />;
+}
+
+function PreviewItem({
+  n,
+  title,
+  body,
+}: {
+  n: number;
+  title: string;
+  body: string;
+}) {
+  return (
+    <li className="flex items-start gap-3">
+      <span className="flex-shrink-0 w-5 h-5 rounded-full bg-paper-rail text-ink-soft text-[10px] font-semibold flex items-center justify-center mt-0.5 tabular-nums">
+        {n}
+      </span>
+      <div className="min-w-0">
+        <div className="text-[12.5px] font-semibold text-ink leading-tight">
+          {title}
+        </div>
+        <div className="text-[12px] text-ink-soft mt-0.5 leading-snug">
+          {body}
+        </div>
+      </div>
+    </li>
+  );
 }
 
 function Meta({
