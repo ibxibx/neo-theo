@@ -141,12 +141,16 @@ function PhoneGlyph({ variant }: { variant: "answer" | "end" }) {
   // ~85% of the parent button — giving the Apple ~45% icon-to-circle ratio
   // when rendered inside a 72px circle.
   //
-  // The transform is the iconic iOS dial-pad tilt:
-  //   answer = rotate(-30deg)  — handset coming up "off-hook"
-  //   end    = rotate(135deg)  — handset coming down to hang up
+  // Path geometry: earpiece is at top-left (~9,6), mouthpiece at bottom-right
+  // (~29,26), so the un-rotated handset lies on a top-left → bottom-right
+  // diagonal. To match the canonical iOS Phone-app angles:
+  //   answer = rotate(45deg)   → handset stands upright (earpiece up,
+  //                              mouthpiece down) — the "off-hook" pose you
+  //                              expect on a ringing iPhone
+  //   end    = rotate(135deg)  → handset tips down to hang up
   return (
     <svg width="32" height="32" viewBox="0 0 32 32" fill="none" aria-hidden>
-      <g transform={variant === "answer" ? "rotate(-30 16 16)" : "rotate(135 16 16)"}>
+      <g transform={variant === "answer" ? "rotate(45 16 16)" : "rotate(135 16 16)"}>
         <path
           fill="currentColor"
           d="M9.36 5.6c-1.5 0-2.84 1.2-2.84 2.83 0 12.05 9.4 21.45 21.45 21.45 1.62 0 2.82-1.33 2.82-2.83v-3.85c0-1.36-.92-2.32-2.23-2.59l-3.92-.78c-1.2-.24-1.92-.02-2.43.48l-1.78 1.78c-2.55-1.27-4.7-3.42-5.97-5.97l1.78-1.78c.5-.5.72-1.23.48-2.43l-.78-3.93c-.27-1.3-1.23-2.22-2.6-2.22H9.37z"
