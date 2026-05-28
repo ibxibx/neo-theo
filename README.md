@@ -21,6 +21,13 @@
 ## 📸 See It Live
 
 <div align="center">
+  <img src="./docs/assets/dashboard-idle.png" alt="neo-theo staff dashboard — idle state, ready to receive a call, with the Triage column previewing the six sections that will populate live" width="100%" />
+  <p><sub><b>Staff dashboard, idle &mdash; ready for the next call.</b> Tenant pre-identified on the iPhone preview (left) · empty conversation rail (center) waiting for the first transcript bubble · the Triage column on the right previews <i>exactly</i> what will appear live once the call ends: Situation, Dringlichkeit &amp; SLA, Nächste Aktion &amp; Routing, Details, Wissens-Erfassung, and Stichwörter.</sub></p>
+</div>
+
+<br />
+
+<div align="center">
   <img src="./docs/assets/dashboard-overview.png" alt="neo-theo staff dashboard — full workspace view during a live emergency call" width="100%" />
   <p><sub><b>Staff dashboard during a live call.</b> Tenant identified by phone on pickup · live German transcript streaming from ElevenLabs · Claude triage on the right classifies <code>EMERGENCY · electrical · 93% confidence</code> with full reasoning · dispatch panel auto-routes to a vetted vendor and surfaces the confirmation email to the tenant.</sub></p>
 </div>
